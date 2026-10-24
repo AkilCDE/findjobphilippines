@@ -15,6 +15,7 @@ RUN npm ci --ignore-scripts || npm install --ignore-scripts
 COPY vite.config.js ./
 COPY resources/ ./resources/
 COPY public/ ./public/
+COPY app/ ./app/
 
 # Compile production assets
 RUN npm run build

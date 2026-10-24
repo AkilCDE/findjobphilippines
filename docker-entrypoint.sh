@@ -79,7 +79,19 @@ fi
 export LOG_CHANNEL="${LOG_CHANNEL:-stack}"
 export LOG_STACK="${LOG_STACK:-single,stderr}"
 
-# 7. Initial permissions
+# 7. Ensure HTTPS and production environment for Render
+if [ -n "$RENDER_EXTERNAL_URL" ]; then
+    export APP_URL="${RENDER_EXTERNAL_URL}"
+    export ASSET_URL="${RENDER_EXTERNAL_URL}"
+    sed -i "s|^APP_URL=.*|APP_URL=${RENDER_EXTERNAL_URL}|g" /var/www/html/.env 2>/dev/null || true
+elif [ -z "$APP_URL" ] || [ "$APP_URL" = "http://localhost:8000" ] || [ "$APP_URL" = "http://localhost" ]; then
+    export APP_URL="https://findjobph.onrender.com"
+    export ASSET_URL="https://findjobph.onrender.com"
+    sed -i "s|^APP_URL=.*|APP_URL=https://findjobph.onrender.com|g" /var/www/html/.env 2>/dev/null || true
+fi
+export APP_ENV="${APP_ENV:-production}"
+
+# 8. Initial permissions
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 

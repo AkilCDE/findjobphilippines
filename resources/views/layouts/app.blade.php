@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
     <title>{{ $title ?? 'Findjobph - Find, Search & Post Jobs in the Philippines' }}</title>
 
@@ -17,6 +18,9 @@
         body {
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
             color: #0f172a;
+        }
+        svg {
+            max-width: 100%;
         }
         .ph-marker-pulse {
             width: 14px;
@@ -53,8 +57,8 @@
                 <!-- Logo & Brand -->
                 <div class="flex items-center space-x-3">
                     <a href="{{ route('jobs.index') }}" class="flex items-center space-x-2.5 group">
-                        <div class="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform">
-                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <div class="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform shrink-0">
+                            <svg class="w-6 h-6 shrink-0" width="24" height="24" style="width: 24px; height: 24px; max-width: 24px; max-height: 24px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                         </div>
