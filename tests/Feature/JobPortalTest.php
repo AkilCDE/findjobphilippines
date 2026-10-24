@@ -138,10 +138,238 @@ class JobPortalTest extends TestCase
 
         $response = $this->actingAs($admin)->get('/admin/dashboard');
         $response->assertStatus(200);
-        $response->assertSee('Admin Command Dashboard');
+        $response->assertSee('Admin Dashboard');
 
         $usersResponse = $this->actingAs($admin)->get('/admin/users');
         $usersResponse->assertStatus(200);
         $usersResponse->assertSee('User Management');
+    }
+
+    public function test_employer_can_fire_worker_and_slot_automatically_reopens(): void
+    {
+        $employer = User::factory()->create(['role' => 'employer']);
+        $worker = User::factory()->create(['role' => 'worker']);
+
+        $post = JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Warehouse Stacker',
+            'category' => 'Logistics & Delivery',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱600 / day',
+            'workers_needed' => 1,
+            'workers_hired' => 1,
+            'status' => 'locked',
+            'location_address' => 'Cebu City',
+            'latitude' => 10.3157,
+            'longitude' => 123.8854,
+            'requirements' => 'Physically fit',
+            'description' => 'Heavy lifting and organizing.',
+        ]);
+
+        $application = JobApplication::create([
+            'job_post_id' => $post->id,
+            'worker_id' => $worker->id,
+            'status' => 'hired',
+            'submitted_requirements' => 'Barangay clearance, Medical certificate',
+            'hired_at' => now(),
+        ]);
+
+        $this->assertTrue($post->isLocked());
+        $this->assertTrue($worker->hasActiveJob());
+
+        // Employer fires the worker
+        $fireResponse = $this->actingAs($employer)->post(
+            "/employer/posts/{$post->id}/applicants/{$application->id}/fire",
+            ['reason' => 'Repeated tardiness']
+        );
+
+        $fireResponse->assertSessionHas('success');
+
+        $application->refresh();
+        $this->assertEquals('fired', $application->status);
+        $this->assertNotNull($application->ended_at);
+
+        // Verify post unlocked and worker count decremented
+        $post->refresh();
+        $this->assertEquals(0, $post->workers_hired);
+        $this->assertEquals('open', $post->status);
+        $this->assertFalse($post->isLocked());
+
+        // Worker no longer has active job and can apply elsewhere
+        $worker->refresh();
+        $this->assertFalse($worker->hasActiveJob());
+    }
+
+    public function test_worker_with_active_job_cannot_apply_for_another_job(): void
+    {
+        $employer1 = User::factory()->create(['role' => 'employer']);
+        $employer2 = User::factory()->create(['role' => 'employer']);
+        $worker = User::factory()->create(['role' => 'worker']);
+
+        // First job where worker is actively hired
+        $job1 = JobPost::create([
+            'employer_id' => $employer1->id,
+            'title' => 'Security Guard',
+            'category' => 'General Labor',
+            'job_type' => 'Full-time',
+            'workers_needed' => 2,
+            'workers_hired' => 1,
+            'status' => 'open',
+            'location_address' => 'Tagbilaran City',
+            'latitude' => 9.6444,
+            'longitude' => 123.8566,
+            'requirements' => 'Security License',
+            'description' => 'Day shift guard.',
+        ]);
+
+        JobApplication::create([
+            'job_post_id' => $job1->id,
+            'worker_id' => $worker->id,
+            'status' => 'hired',
+            'submitted_requirements' => 'Security ID',
+            'hired_at' => now(),
+        ]);
+
+        $this->assertTrue($worker->hasActiveJob());
+
+        // Second job that worker tries to apply for
+        $job2 = JobPost::create([
+            'employer_id' => $employer2->id,
+            'title' => 'Driver',
+            'category' => 'Logistics & Delivery',
+            'job_type' => 'Full-time',
+            'workers_needed' => 1,
+            'workers_hired' => 0,
+            'status' => 'open',
+            'location_address' => 'Dauis, Bohol',
+            'latitude' => 9.6200,
+            'longitude' => 123.8600,
+            'requirements' => 'Drivers License',
+            'description' => 'Company van driver.',
+        ]);
+
+        // Attempt to apply should fail due to active job trapping
+        $applyResponse = $this->actingAs($worker)->post("/jobs/{$job2->id}/apply", [
+            'submitted_requirements' => 'Professional Drivers License',
+        ]);
+
+        $applyResponse->assertSessionHas('error');
+        $this->assertDatabaseMissing('job_applications', [
+            'job_post_id' => $job2->id,
+            'worker_id' => $worker->id,
+        ]);
+    }
+
+    public function test_worker_can_request_leave_and_employer_confirmation_releases_worker(): void
+    {
+        $employer = User::factory()->create(['role' => 'employer']);
+        $worker = User::factory()->create(['role' => 'worker']);
+
+        $job = JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Cashier',
+            'category' => 'Retail & Sales',
+            'job_type' => 'Full-time',
+            'workers_needed' => 1,
+            'workers_hired' => 1,
+            'status' => 'locked',
+            'location_address' => 'Panglao, Bohol',
+            'latitude' => 9.5794,
+            'longitude' => 123.7544,
+            'requirements' => 'High school diploma',
+            'description' => 'Store cashier.',
+        ]);
+
+        $application = JobApplication::create([
+            'job_post_id' => $job->id,
+            'worker_id' => $worker->id,
+            'status' => 'hired',
+            'submitted_requirements' => 'Diploma, IDs',
+            'hired_at' => now(),
+        ]);
+
+        // Worker requests leave / quit
+        $leaveResponse = $this->actingAs($worker)->post(
+            "/worker/applications/{$application->id}/request-leave",
+            ['leave_reason' => 'Moving to another province']
+        );
+
+        $leaveResponse->assertSessionHas('success');
+
+        $application->refresh();
+        $this->assertEquals('leave_requested', $application->status);
+        $this->assertNotNull($application->leave_requested_at);
+
+        // Employer confirms leave
+        $confirmResponse = $this->actingAs($employer)->post(
+            "/employer/posts/{$job->id}/applicants/{$application->id}/confirm-leave"
+        );
+
+        $confirmResponse->assertSessionHas('success');
+
+        $application->refresh();
+        $this->assertEquals('resigned', $application->status);
+        $this->assertNotNull($application->ended_at);
+
+        // Post capacity reopened and unlocked
+        $job->refresh();
+        $this->assertEquals(0, $job->workers_hired);
+        $this->assertEquals('open', $job->status);
+
+        // Worker is now released and can apply for new jobs
+        $worker->refresh();
+        $this->assertFalse($worker->hasActiveJob());
+    }
+
+    public function test_employer_cannot_apply_for_another_employer_job_and_can_direct_message(): void
+    {
+        $employer1 = User::factory()->create(['role' => 'employer']);
+        $employer2 = User::factory()->create(['role' => 'employer']);
+
+        $job = JobPost::create([
+            'employer_id' => $employer1->id,
+            'title' => 'Project Engineer',
+            'category' => 'Construction & Skilled Trades',
+            'job_type' => 'Contract',
+            'workers_needed' => 2,
+            'workers_hired' => 0,
+            'status' => 'open',
+            'location_address' => 'Cebu IT Park',
+            'latitude' => 10.3297,
+            'longitude' => 123.9060,
+            'requirements' => 'Civil Engineering degree',
+            'description' => 'Commercial site oversight.',
+        ]);
+
+        // Employer 2 browses details of Employer 1's post
+        $showResponse = $this->actingAs($employer2)->get("/jobs/{$job->id}");
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('Employer-to-Employer Overview');
+        $showResponse->assertDontSee('Submit Application');
+
+        // Employer 2 attempts to apply via POST endpoint
+        $applyResponse = $this->actingAs($employer2)->post("/jobs/{$job->id}/apply", [
+            'submitted_requirements' => 'Engineering License',
+        ]);
+
+        // Forbidden by worker role middleware or controller restriction
+        $this->assertDatabaseMissing('job_applications', [
+            'job_post_id' => $job->id,
+            'worker_id' => $employer2->id,
+        ]);
+
+        // Employer 2 can direct message Employer 1
+        $msgResponse = $this->actingAs($employer2)->post('/messages', [
+            'receiver_id' => $employer1->id,
+            'job_post_id' => $job->id,
+            'message' => 'Hello, our construction firm is open for sub-contracting collaboration.',
+        ]);
+
+        $msgResponse->assertRedirect(route('messages.index', ['user_id' => $employer1->id]));
+        $this->assertDatabaseHas('messages', [
+            'sender_id' => $employer2->id,
+            'receiver_id' => $employer1->id,
+            'job_post_id' => $job->id,
+        ]);
     }
 }

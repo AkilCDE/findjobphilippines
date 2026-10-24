@@ -34,6 +34,10 @@ class EmployerController extends Controller
             $q->where('employer_id', $user->id);
         })->where('status', 'pending')->count();
 
+        $pendingLeaveRequestsCount = JobApplication::whereHas('jobPost', function ($q) use ($user) {
+            $q->where('employer_id', $user->id);
+        })->where('status', 'leave_requested')->count();
+
         return view('employer.dashboard', compact(
             'posts',
             'totalPosts',
@@ -42,7 +46,8 @@ class EmployerController extends Controller
             'archivedPosts',
             'totalHired',
             'totalNeeded',
-            'pendingApplicationsCount'
+            'pendingApplicationsCount',
+            'pendingLeaveRequestsCount'
         ));
     }
 
@@ -254,9 +259,18 @@ class EmployerController extends Controller
             return back()->with('info', "Worker {$application->worker->display_name} is already hired.");
         }
 
+        // Restriction: Verify applicant worker is not currently active in another position
+        if ($application->worker && $application->worker->hasActiveJob() && ! $application->isActiveEngagement()) {
+            return back()->with('error', "Worker {$application->worker->display_name} already holds another active job and cannot be hired until released from that position.");
+        }
+
         $application->update([
             'status' => 'hired',
             'hired_at' => now(),
+            'leave_reason' => null,
+            'leave_requested_at' => null,
+            'termination_reason' => null,
+            'ended_at' => null,
         ]);
 
         $jobPost->increment('workers_hired');
@@ -271,6 +285,95 @@ class EmployerController extends Controller
     }
 
     /**
+     * Fire / terminate a worker from this job post and automatically kick them.
+     */
+    public function fireWorker(Request $request, JobPost $jobPost, JobApplication $application): RedirectResponse
+    {
+        $this->authorizePost($jobPost);
+
+        if ($application->job_post_id !== $jobPost->id) {
+            abort(404);
+        }
+
+        if (! $application->isActiveEngagement()) {
+            return back()->with('error', 'This worker is not currently active in this position.');
+        }
+
+        $workerName = $application->worker?->display_name ?? 'Worker';
+
+        $application->update([
+            'status' => 'fired',
+            'termination_reason' => $request->input('reason', 'Terminated and kicked by employer.'),
+            'ended_at' => now(),
+        ]);
+
+        if ($jobPost->workers_hired > 0) {
+            $jobPost->decrement('workers_hired');
+            $jobPost->refresh();
+            $jobPost->syncLockStatus();
+        }
+
+        return back()->with('success', "Worker {$workerName} has been fired and automatically kicked from this job. The hiring slot has reopened ({$jobPost->workers_hired}/{$jobPost->workers_needed} filled).");
+    }
+
+    /**
+     * Confirm a worker's request to leave / quit the job.
+     */
+    public function confirmLeave(JobPost $jobPost, JobApplication $application): RedirectResponse
+    {
+        $this->authorizePost($jobPost);
+
+        if ($application->job_post_id !== $jobPost->id) {
+            abort(404);
+        }
+
+        if ($application->status !== 'leave_requested') {
+            return back()->with('error', 'No pending leave request found for this worker.');
+        }
+
+        $workerName = $application->worker?->display_name ?? 'Worker';
+
+        $application->update([
+            'status' => 'resigned',
+            'ended_at' => now(),
+        ]);
+
+        if ($jobPost->workers_hired > 0) {
+            $jobPost->decrement('workers_hired');
+            $jobPost->refresh();
+            $jobPost->syncLockStatus();
+        }
+
+        return back()->with('success', "Leave request for {$workerName} has been approved. The worker has been released from this job and the slot is reopened ({$jobPost->workers_hired}/{$jobPost->workers_needed} filled).");
+    }
+
+    /**
+     * Decline a worker's request to leave.
+     */
+    public function rejectLeave(JobPost $jobPost, JobApplication $application): RedirectResponse
+    {
+        $this->authorizePost($jobPost);
+
+        if ($application->job_post_id !== $jobPost->id) {
+            abort(404);
+        }
+
+        if ($application->status !== 'leave_requested') {
+            return back()->with('error', 'No pending leave request found for this worker.');
+        }
+
+        $workerName = $application->worker?->display_name ?? 'Worker';
+
+        $application->update([
+            'status' => 'hired',
+            'leave_reason' => null,
+            'leave_requested_at' => null,
+        ]);
+
+        return back()->with('info', "Leave request for {$workerName} was declined. The worker remains active.");
+    }
+
+    /**
      * Reject an applicant worker.
      */
     public function rejectApplicant(JobPost $jobPost, JobApplication $application): RedirectResponse
@@ -282,7 +385,7 @@ class EmployerController extends Controller
         }
 
         // If previously hired, decrement hired count
-        if ($application->status === 'hired' && $jobPost->workers_hired > 0) {
+        if ($application->isActiveEngagement() && $jobPost->workers_hired > 0) {
             $jobPost->decrement('workers_hired');
             $jobPost->refresh();
             $jobPost->syncLockStatus();

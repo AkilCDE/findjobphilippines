@@ -4,18 +4,15 @@
 <div class="space-y-6">
 
     <!-- Header -->
-    <div class="glass-panel p-6 rounded-3xl border border-white/80 shadow-xl flex items-center justify-between">
+    <div class="glass-panel p-5 rounded-2xl border border-white/80 shadow-sm flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-black text-slate-950 tracking-tight">
-                Direct Messaging
+            <h1 class="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
+                Messages
             </h1>
-            <p class="text-xs font-semibold text-slate-700 mt-0.5">
-                Communicate directly between workers and employers regarding requirements, interview schedules, and site coordinates.
+            <p class="text-xs font-semibold text-slate-600 mt-0.5">
+                Direct conversations regarding job applications and details
             </p>
         </div>
-        <span class="text-xs font-bold text-sky-800 bg-sky-100 px-3 py-1 rounded-full border border-sky-200">
-            Real-time Chat
-        </span>
     </div>
 
     <!-- Chat Interface Container (Glassmorphism Two-Column) -->

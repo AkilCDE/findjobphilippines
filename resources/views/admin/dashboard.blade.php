@@ -6,16 +6,11 @@
     <!-- Admin Header Banner -->
     <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-white/80 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center gap-2 mb-1.5">
-                <span class="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200">
-                    Administrator Center
-                </span>
-            </div>
-            <h1 class="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight">
-                Admin Command Dashboard
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
+                Admin Dashboard
             </h1>
-            <p class="text-xs sm:text-sm font-semibold text-slate-700 mt-1">
-                Full authority over users, employers, workers, and job postings sorted by users across the Philippines.
+            <p class="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
+                Manage users, employers, workers, and job postings
             </p>
         </div>
 

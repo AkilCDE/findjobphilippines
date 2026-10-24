@@ -52,6 +52,8 @@ Route::middleware(['auth', 'role:worker'])->group(function () {
     Route::post('/jobs/{jobPost}/apply', [WorkerController::class, 'apply'])->name('worker.apply');
     Route::get('/worker/applications', [WorkerController::class, 'applications'])->name('worker.applications');
     Route::delete('/worker/applications/{application}', [WorkerController::class, 'cancelApplication'])->name('worker.applications.cancel');
+    Route::post('/worker/applications/{application}/request-leave', [WorkerController::class, 'requestLeave'])->name('worker.applications.request-leave');
+    Route::post('/worker/applications/{application}/cancel-leave', [WorkerController::class, 'cancelLeave'])->name('worker.applications.cancel-leave');
 });
 
 /*
@@ -73,6 +75,9 @@ Route::middleware(['auth', 'role:employer'])->prefix('employer')->name('employer
     Route::get('/posts/{jobPost}/applicants', [EmployerController::class, 'applicants'])->name('posts.applicants');
     Route::post('/posts/{jobPost}/applicants/{application}/hire', [EmployerController::class, 'hireApplicant'])->name('posts.applicants.hire');
     Route::post('/posts/{jobPost}/applicants/{application}/reject', [EmployerController::class, 'rejectApplicant'])->name('posts.applicants.reject');
+    Route::post('/posts/{jobPost}/applicants/{application}/fire', [EmployerController::class, 'fireWorker'])->name('posts.applicants.fire');
+    Route::post('/posts/{jobPost}/applicants/{application}/confirm-leave', [EmployerController::class, 'confirmLeave'])->name('posts.applicants.confirm-leave');
+    Route::post('/posts/{jobPost}/applicants/{application}/reject-leave', [EmployerController::class, 'rejectLeave'])->name('posts.applicants.reject-leave');
 });
 
 /*

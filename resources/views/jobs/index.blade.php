@@ -3,6 +3,22 @@
 @section('content')
 <div class="space-y-6">
 
+    <!-- Attracting Header Section (Big & Small Text) -->
+    <div class="text-center pt-2 pb-1 space-y-2.5">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold bg-sky-100 text-sky-900 border border-sky-200 shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+            <span>Verified Work Across the Philippines</span>
+        </div>
+        
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-950 tracking-tight leading-tight">
+            Find Your Next Job. <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-blue-600">Start Today.</span>
+        </h1>
+        
+        <p class="text-xs sm:text-sm md:text-base font-semibold text-slate-600 max-w-xl mx-auto leading-relaxed">
+            Discover verified jobs with workplace map pins, transparent salaries, and direct employer hiring.
+        </p>
+    </div>
+
     <!-- Clean, Compact Search & Filter Bar -->
     <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-white/80 shadow-sm">
         <form method="GET" action="{{ route('jobs.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
@@ -69,9 +85,18 @@
                     <div class="space-y-2.5">
                         <!-- Category & Status -->
                         <div class="flex items-center justify-between gap-2">
-                            <span class="text-[11px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded">
-                                {{ $job->category }}
-                            </span>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="text-[11px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded">
+                                    {{ $job->category }}
+                                </span>
+                                @auth
+                                    @if(auth()->user()->isEmployer() && $job->employer_id === auth()->id())
+                                        <span class="text-[10px] font-black px-2 py-0.5 rounded bg-sky-500 text-white shadow-xs">
+                                            Your Post
+                                        </span>
+                                    @endif
+                                @endauth
+                            </div>
 
                             @if($job->isLocked())
                                 <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">
@@ -132,9 +157,15 @@
 
                     <!-- Single Clean Button -->
                     <div class="mt-4 pt-3 border-t border-slate-100">
+                        @php
+                            $btnText = 'View Details & Apply';
+                            if (auth()->check() && auth()->user()->isEmployer()) {
+                                $btnText = ($job->employer_id === auth()->id()) ? 'Manage My Post' : 'View Details';
+                            }
+                        @endphp
                         <a href="{{ route('jobs.show', $job) }}"
                             class="w-full py-2 px-3 rounded-xl {{ $job->isLocked() ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-sky-500 hover:bg-sky-600 text-white shadow-sm' }} font-bold text-xs flex items-center justify-center transition-colors">
-                            View Details & Apply
+                            {{ $btnText }}
                         </a>
                     </div>
 

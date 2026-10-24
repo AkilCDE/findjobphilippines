@@ -6,16 +6,11 @@
     <!-- Header Section -->
     <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-white/80 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center gap-2 mb-1.5">
-                <span class="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                    Worker Portal
-                </span>
-            </div>
             <h1 class="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
-                My Job Applications
+                My Applications
             </h1>
-            <p class="text-xs sm:text-sm font-semibold text-slate-700 mt-1">
-                Track your active applications, submitted requirements, hire status, and employer communications.
+            <p class="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
+                Track your active job applications and hiring status
             </p>
         </div>
 
@@ -54,6 +49,79 @@
             <p class="text-[11px] font-semibold text-slate-600 mt-0.5">Closed Out</p>
         </div>
     </div>
+
+    <!-- Active Employment Banner (if currently hired or requesting leave) -->
+    @if($activeEngagement)
+        <div class="glass-panel p-6 sm:p-7 rounded-3xl border-2 {{ $activeEngagement->isLeaveRequested() ? 'border-amber-400 bg-amber-50/80' : 'border-emerald-400 bg-emerald-50/80' }} shadow-xl space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl {{ $activeEngagement->isLeaveRequested() ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white' }} flex items-center justify-center text-xl font-black shadow-md flex-shrink-0">
+                        {{ $activeEngagement->isLeaveRequested() ? '⏳' : '💼' }}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded {{ $activeEngagement->isLeaveRequested() ? 'bg-amber-200 text-amber-950 font-black' : 'bg-emerald-200 text-emerald-950 font-black' }}">
+                                {{ $activeEngagement->isLeaveRequested() ? 'Leave Request Pending' : 'Current Active Position' }}
+                            </span>
+                            <span class="text-xs font-bold text-slate-600">
+                                Since {{ $activeEngagement->hired_at?->format('M d, Y') ?? $activeEngagement->created_at->format('M d, Y') }}
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-black text-slate-950 mt-0.5">
+                            <a href="{{ route('jobs.show', $activeEngagement->jobPost) }}" class="hover:text-sky-700 transition-colors">
+                                {{ $activeEngagement->jobPost?->title }}
+                            </a>
+                        </h3>
+                        <p class="text-xs font-semibold text-slate-700">
+                            🏢 {{ $activeEngagement->jobPost?->employer?->display_name }} • 📍 {{ $activeEngagement->jobPost?->location_address }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                    <a href="{{ route('messages.index', ['user_id' => $activeEngagement->jobPost?->employer_id, 'job_id' => $activeEngagement->job_post_id]) }}"
+                        class="px-4 py-2 rounded-xl border border-sky-300 bg-white hover:bg-sky-50 text-sky-800 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs">
+                        <svg class="w-4 h-4 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                        Message Employer
+                    </a>
+
+                    @if($activeEngagement->isHired())
+                        <!-- Request Leave / Quit Button -->
+                        <button type="button"
+                            onclick="confirmAction({
+                                title: 'Request to Leave / Quit Job?',
+                                message: 'Are you sure you want to request to leave this job at {{ addslashes($activeEngagement->jobPost?->employer?->display_name) }}? Your employer will review and confirm your release. Once confirmed, you can apply for new jobs.',
+                                formAction: '{{ route('worker.applications.request-leave', $activeEngagement) }}',
+                                confirmText: 'Yes, Submit Leave Request',
+                                confirmClass: 'bg-amber-600 hover:bg-amber-700 text-white'
+                            })"
+                            class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02]">
+                            Request Leave / Quit Job
+                        </button>
+                    @elseif($activeEngagement->isLeaveRequested())
+                        <!-- Cancel Leave Request Button -->
+                        <button type="button"
+                            onclick="confirmAction({
+                                title: 'Cancel Leave Request?',
+                                message: 'Do you want to cancel your leave request and remain actively hired at {{ addslashes($activeEngagement->jobPost?->employer?->display_name) }}?',
+                                formAction: '{{ route('worker.applications.cancel-leave', $activeEngagement) }}',
+                                confirmText: 'Yes, Keep Job',
+                                confirmClass: 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            })"
+                            class="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs transition-colors">
+                            Cancel Leave Request
+                        </button>
+                    @endif
+                </div>
+            </div>
+
+            @if($activeEngagement->isLeaveRequested())
+                <div class="p-3.5 rounded-2xl bg-amber-100/70 border border-amber-300/80 text-xs text-amber-950 font-medium">
+                    ⚠️ <strong>Leave Request Submitted:</strong> Awaiting employer confirmation to release you from this job. You will be free to apply for other opportunities as soon as the employer confirms.
+                </div>
+            @endif
+        </div>
+    @endif
 
     <!-- Applications List -->
     <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-white/80 shadow-xl space-y-4">
@@ -109,6 +177,19 @@
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         HIRED!
                                     </div>
+                                @elseif($app->isLeaveRequested())
+                                    <div class="px-3.5 py-1.5 rounded-full bg-amber-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm">
+                                        <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                                        Leave Requested
+                                    </div>
+                                @elseif($app->isFired())
+                                    <div class="px-3.5 py-1.5 rounded-full bg-red-100 text-red-900 border border-red-300 font-extrabold text-xs">
+                                        Position Ended (Fired)
+                                    </div>
+                                @elseif($app->isResigned())
+                                    <div class="px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-300 font-extrabold text-xs">
+                                        Left Job (Resigned)
+                                    </div>
                                 @elseif($app->isRejected())
                                     <div class="px-3.5 py-1.5 rounded-full bg-red-100 text-red-900 border border-red-200 font-extrabold text-xs">
                                         Rejected
@@ -128,28 +209,60 @@
                             <p class="whitespace-pre-line leading-relaxed font-semibold text-slate-800">{{ $app->submitted_requirements }}</p>
                         </div>
 
+                        @if($app->termination_reason)
+                            <div class="p-3 bg-red-50 rounded-2xl border border-red-200 text-xs text-red-900 font-semibold">
+                                <strong>Employer Termination Note:</strong> {{ $app->termination_reason }}
+                            </div>
+                        @endif
+
                         <!-- Action Buttons -->
-                        <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 text-xs">
                             <a href="{{ route('messages.index', ['user_id' => $app->jobPost?->employer_id, 'job_id' => $app->job_post_id]) }}"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-sky-200 bg-white hover:bg-sky-50 text-sky-800 font-bold transition-colors">
                                 <svg class="w-4 h-4 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                                 Direct Message Employer
                             </a>
 
-                            @if($app->isPending())
-                                <button type="button"
-                                    onclick="confirmAction({
-                                        title: 'Withdraw Application?',
-                                        message: 'Are you sure you want to withdraw your application for {{ addslashes($app->jobPost?->title) }}?',
-                                        formAction: '{{ route('worker.applications.cancel', $app) }}',
-                                        method: 'DELETE',
-                                        confirmText: 'Yes, Withdraw',
-                                        confirmClass: 'bg-red-600 hover:bg-red-700 text-white'
-                                    })"
-                                    class="text-xs font-bold text-slate-600 hover:text-red-600 transition-colors">
-                                    Withdraw Application
-                                </button>
-                            @endif
+                            <div class="flex items-center gap-2">
+                                @if($app->isHired())
+                                    <button type="button"
+                                        onclick="confirmAction({
+                                            title: 'Request to Leave / Quit Job?',
+                                            message: 'Are you sure you want to request to leave this job at {{ addslashes($app->jobPost?->employer?->display_name) }}? Your employer will review and confirm your release.',
+                                            formAction: '{{ route('worker.applications.request-leave', $app) }}',
+                                            confirmText: 'Yes, Submit Leave Request',
+                                            confirmClass: 'bg-amber-600 hover:bg-amber-700 text-white'
+                                        })"
+                                        class="px-3 py-1.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-50 text-amber-800 font-bold text-xs transition-colors">
+                                        Request Leave / Quit
+                                    </button>
+                                @elseif($app->isLeaveRequested())
+                                    <button type="button"
+                                        onclick="confirmAction({
+                                            title: 'Cancel Leave Request?',
+                                            message: 'Cancel your leave request and remain actively hired?',
+                                            formAction: '{{ route('worker.applications.cancel-leave', $app) }}',
+                                            confirmText: 'Yes, Keep Job',
+                                            confirmClass: 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                        })"
+                                        class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors">
+                                        Cancel Leave
+                                    </button>
+                                @elseif($app->isPending())
+                                    <button type="button"
+                                        onclick="confirmAction({
+                                            title: 'Withdraw Application?',
+                                            message: 'Are you sure you want to withdraw your application for {{ addslashes($app->jobPost?->title) }}?',
+                                            formAction: '{{ route('worker.applications.cancel', $app) }}',
+                                            method: 'DELETE',
+                                            confirmText: 'Yes, Withdraw',
+                                            confirmClass: 'bg-red-600 hover:bg-red-700 text-white'
+                                        })"
+                                        class="text-xs font-bold text-slate-600 hover:text-red-600 transition-colors">
+                                        Withdraw Application
+                                    </button>
+                                @endif
+                            </div>
                         </div>
 
                     </div>

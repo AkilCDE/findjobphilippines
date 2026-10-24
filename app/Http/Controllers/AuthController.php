@@ -159,9 +159,7 @@ class AuthController extends Controller
 
         $resetUrl = route('password.reset', ['token' => $token, 'email' => $email]);
 
-        // Provide direct simulation link in session for seamless testing & UX
         return back()->with('status', 'A password reset link has been dispatched to your email!')
-            ->with('demo_reset_link', $resetUrl)
             ->with('email', $email);
     }
 

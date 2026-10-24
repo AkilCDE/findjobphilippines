@@ -23,6 +23,10 @@ class JobApplication extends Model
         'submitted_requirements',
         'attachment_path',
         'hired_at',
+        'leave_reason',
+        'leave_requested_at',
+        'termination_reason',
+        'ended_at',
     ];
 
     /**
@@ -34,6 +38,8 @@ class JobApplication extends Model
     {
         return [
             'hired_at' => 'datetime',
+            'leave_requested_at' => 'datetime',
+            'ended_at' => 'datetime',
         ];
     }
 
@@ -59,6 +65,38 @@ class JobApplication extends Model
     public function isHired(): bool
     {
         return $this->status === 'hired';
+    }
+
+    /**
+     * Check if worker requested to leave/quit.
+     */
+    public function isLeaveRequested(): bool
+    {
+        return $this->status === 'leave_requested';
+    }
+
+    /**
+     * Check if worker has an active engagement (either hired or pending leave confirmation).
+     */
+    public function isActiveEngagement(): bool
+    {
+        return in_array($this->status, ['hired', 'leave_requested']);
+    }
+
+    /**
+     * Check if application has been terminated / fired by employer.
+     */
+    public function isFired(): bool
+    {
+        return $this->status === 'fired';
+    }
+
+    /**
+     * Check if worker has left / resigned after employer confirmation.
+     */
+    public function isResigned(): bool
+    {
+        return $this->status === 'resigned';
     }
 
     /**

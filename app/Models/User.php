@@ -99,6 +99,27 @@ class User extends Authenticatable
     }
 
     /**
+     * Determine if the worker currently holds an active hired job.
+     */
+    public function hasActiveJob(): bool
+    {
+        return $this->applications()
+            ->whereIn('status', ['hired', 'leave_requested'])
+            ->exists();
+    }
+
+    /**
+     * Retrieve the active hired job application for this worker.
+     */
+    public function activeJobApplication(): ?JobApplication
+    {
+        return $this->applications()
+            ->whereIn('status', ['hired', 'leave_requested'])
+            ->with(['jobPost.employer'])
+            ->first();
+    }
+
+    /**
      * Messages sent by this user.
      */
     public function sentMessages(): HasMany

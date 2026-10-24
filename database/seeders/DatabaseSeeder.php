@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
                 'first_name' => 'System',
                 'last_name' => 'Administrator',
                 'role' => 'admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(env('ADMIN_PASSWORD', 'findjobphadmin123')),
                 'contact_number' => '+63 900 000 0001',
                 'address' => 'Makati City, Metro Manila, Philippines',
                 'email_verified_at' => now(),

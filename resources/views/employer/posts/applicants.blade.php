@@ -111,6 +111,18 @@
                                         <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         HIRED WORKER
                                     </span>
+                                @elseif($app->isLeaveRequested())
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
+                                        ⚠️ LEAVE REQUESTED
+                                    </span>
+                                @elseif($app->isFired())
+                                    <span class="inline-block px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-900 border border-red-300">
+                                        FIRED / KICKED
+                                    </span>
+                                @elseif($app->isResigned())
+                                    <span class="inline-block px-3 py-1 rounded-full text-xs font-black bg-slate-100 text-slate-800 border border-slate-300">
+                                        LEFT JOB (RESIGNED)
+                                    </span>
                                 @elseif($app->isRejected())
                                     <span class="inline-block px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-900 border border-red-300">
                                         REJECTED
@@ -122,6 +134,17 @@
                                 @endif
                             </div>
                         </div>
+
+                        <!-- Leave Request Notice (if requested) -->
+                        @if($app->isLeaveRequested())
+                            <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-300/80 text-xs text-amber-950 font-medium space-y-1">
+                                <div class="flex items-center gap-1.5 font-black text-amber-900">
+                                    <span>⚠️ Worker Submitted a Leave Request:</span>
+                                </div>
+                                <p class="text-slate-800"><strong>Reason:</strong> "{{ $app->leave_reason }}"</p>
+                                <p class="text-[11px] text-amber-900">Requested {{ $app->leave_requested_at?->format('M d, Y h:i A') ?? 'recently' }}. Confirming will release this worker and reopen the hiring slot.</p>
+                            </div>
+                        @endif
 
                         <!-- Submitted Requirements & Notes -->
                         <div class="p-4 rounded-2xl bg-white/70 border border-slate-200/60 space-y-2 text-xs">
@@ -144,7 +167,7 @@
                                 </div>
                             @endif
 
-                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between font-semibold">
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between font-semibold flex-wrap gap-2">
                                 <span class="text-slate-700">Contact Number: <strong class="text-slate-950">{{ $app->worker?->contact_number ?? 'Not provided' }}</strong></span>
                                 <span class="text-slate-700">Email: <strong class="text-slate-950">{{ $app->worker?->email }}</strong></span>
                             </div>
@@ -160,11 +183,55 @@
                                 Message {{ $app->worker?->first_name ?? 'Worker' }}
                             </a>
 
-                            <!-- Hire / Reject Form Actions with Pop-ups -->
-                            <div class="flex items-center gap-2">
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-2 flex-wrap">
                                 
-                                <!-- Reject Button -->
-                                @if(!$app->isRejected())
+                                @if($app->isActiveEngagement())
+                                    
+                                    @if($app->isLeaveRequested())
+                                        <!-- Approve Leave Button -->
+                                        <button type="button"
+                                            onclick="confirmAction({
+                                                title: 'Approve Worker Leave?',
+                                                message: 'Approve {{ addslashes($app->worker?->display_name) }}\'s request to leave? The worker will be released from this position and the quota slot will immediately reopen ({{ max(0, $jobPost->workers_hired - 1) }}/{{ $jobPost->workers_needed }}).',
+                                                formAction: '{{ route('employer.posts.applicants.confirm-leave', [$jobPost, $app]) }}',
+                                                confirmText: 'Yes, Approve Leave',
+                                                confirmClass: 'bg-amber-600 hover:bg-amber-700 text-white'
+                                            })"
+                                            class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02]">
+                                            Approve Leave
+                                        </button>
+
+                                        <!-- Decline Leave Button -->
+                                        <button type="button"
+                                            onclick="confirmAction({
+                                                title: 'Decline Leave Request?',
+                                                message: 'Decline {{ addslashes($app->worker?->display_name) }}\'s leave request? Worker will remain active.',
+                                                formAction: '{{ route('employer.posts.applicants.reject-leave', [$jobPost, $app]) }}',
+                                                confirmText: 'Decline Request',
+                                                confirmClass: 'bg-slate-700 hover:bg-slate-800 text-white'
+                                            })"
+                                            class="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs transition-colors">
+                                            Decline Leave
+                                        </button>
+                                    @endif
+
+                                    <!-- Fire Worker Button (Kicks worker and reopens slot) -->
+                                    <button type="button"
+                                        onclick="confirmAction({
+                                            title: 'Fire Worker Confirmation',
+                                            message: 'Are you sure you want to fire {{ addslashes($app->worker?->display_name) }}? They will be automatically kicked from this job, and the slot will immediately reopen ({{ max(0, $jobPost->workers_hired - 1) }}/{{ $jobPost->workers_needed }}).',
+                                            formAction: '{{ route('employer.posts.applicants.fire', [$jobPost, $app]) }}',
+                                            confirmText: 'Yes, Fire Worker',
+                                            confirmClass: 'bg-red-600 hover:bg-red-700 text-white'
+                                        })"
+                                        class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md shadow-red-500/20 transition-all hover:scale-[1.02]">
+                                        Fire Worker
+                                    </button>
+
+                                @elseif($app->isPending())
+                                    
+                                    <!-- Reject Button -->
                                     <button type="button"
                                         onclick="confirmAction({
                                             title: 'Reject Application?',
@@ -176,13 +243,15 @@
                                         class="px-3 py-2 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-xs transition-colors">
                                         Reject
                                     </button>
-                                @endif
 
-                                <!-- Hire Button -->
-                                @if(!$app->isHired())
+                                    <!-- Hire Button -->
                                     @if($jobPost->isLocked())
                                         <span class="text-xs font-bold text-slate-500 italic">
                                             Quota Full (Cannot Hire)
+                                        </span>
+                                    @elseif($app->worker && $app->worker->hasActiveJob())
+                                        <span class="text-xs font-bold text-amber-700 italic px-2 py-1 bg-amber-50 rounded-lg border border-amber-200">
+                                            Worker Hired Elsewhere
                                         </span>
                                     @else
                                         <button type="button"
@@ -197,9 +266,14 @@
                                             Hire Worker
                                         </button>
                                     @endif
-                                @else
-                                    <span class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 font-extrabold text-xs border border-emerald-200">
-                                        ✓ Currently Hired
+
+                                @elseif($app->isFired())
+                                    <span class="text-xs font-bold text-red-700 italic">
+                                        Worker Fired / Terminated
+                                    </span>
+                                @elseif($app->isResigned())
+                                    <span class="text-xs font-bold text-slate-600 italic">
+                                        Worker Resigned / Released
                                     </span>
                                 @endif
 

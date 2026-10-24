@@ -6,16 +6,11 @@
     <!-- Header Section -->
     <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-white/80 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center gap-2 mb-1.5">
-                <span class="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
-                    Employer Center
-                </span>
-            </div>
-            <h1 class="text-2xl sm:text-4xl font-black text-slate-950 tracking-tight">
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
                 Employer Dashboard
             </h1>
-            <p class="text-sm font-semibold text-slate-700 mt-1">
-                Manage your job postings, track hired worker quotas, and review worker applications.
+            <p class="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
+                Manage your job postings and worker applications
             </p>
         </div>
 
@@ -31,6 +26,28 @@
             </a>
         </div>
     </div>
+
+    @if($pendingLeaveRequestsCount > 0)
+        <div class="glass-panel p-5 rounded-3xl border border-amber-300 bg-amber-50/80 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
+                    ⚠️
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-amber-950">
+                        {{ $pendingLeaveRequestsCount }} Worker Leave Request{{ $pendingLeaveRequestsCount > 1 ? 's' : '' }} Pending Confirmation
+                    </h3>
+                    <p class="text-xs font-semibold text-amber-900 mt-0.5">
+                        Worker(s) have requested to leave/quit their positions. Review and confirm to release them and reopen job slots.
+                    </p>
+                </div>
+            </div>
+            <a href="{{ route('employer.posts.index') }}"
+                class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-sm transition-all whitespace-nowrap text-center">
+                Review in Posts
+            </a>
+        </div>
+    @endif
 
     <!-- Metric Stat Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full overflow-x-hidden">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,9 +16,8 @@
     <style>
         body {
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-            color: #0f172a; /* high-contrast black text */
+            color: #0f172a;
         }
-        /* Leaflet pin pulse effect */
         .ph-marker-pulse {
             width: 14px;
             height: 14px;
@@ -37,7 +36,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-full flex flex-col bg-gradient-to-br from-sky-50 via-white to-blue-50/70 text-slate-900 antialiased relative selection:bg-sky-500 selection:text-white">
+<body class="min-h-full flex flex-col bg-gradient-to-br from-sky-50 via-white to-blue-50/70 text-slate-900 antialiased relative selection:bg-sky-500 selection:text-white overflow-x-hidden">
 
     <!-- Ambient Blurry Background Spheres for Authentic Glassmorphism -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -47,7 +46,7 @@
     </div>
 
     <!-- Clean Solid White Top Navigation -->
-    <header class="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-sm w-full">
+    <header class="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-sm w-full overflow-x-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 sm:h-20">
                 

@@ -67,11 +67,19 @@ class JobPost extends Model
     }
 
     /**
-     * Applications that have been hired.
+     * Applications that are currently occupying a hired slot.
      */
     public function hiredApplications(): HasMany
     {
-        return $this->hasMany(JobApplication::class, 'job_post_id')->where('status', 'hired');
+        return $this->hasMany(JobApplication::class, 'job_post_id')->whereIn('status', ['hired', 'leave_requested']);
+    }
+
+    /**
+     * Applications with pending leave requests from workers.
+     */
+    public function leaveRequestedApplications(): HasMany
+    {
+        return $this->hasMany(JobApplication::class, 'job_post_id')->where('status', 'leave_requested');
     }
 
     /**
