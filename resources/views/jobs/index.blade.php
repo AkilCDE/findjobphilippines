@@ -1,0 +1,152 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6">
+
+    <!-- Clean, Compact Search & Filter Bar -->
+    <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-white/80 shadow-sm">
+        <form method="GET" action="{{ route('jobs.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+            
+            <!-- Search Keyword -->
+            <div class="md:col-span-5 relative">
+                <input type="text" name="search" value="{{ request('search') }}"
+                    placeholder="Search jobs by title or location..."
+                    class="w-full px-4 py-2.5 rounded-xl glass-input text-xs font-semibold">
+            </div>
+
+            <!-- Category -->
+            <div class="md:col-span-3">
+                <select name="category" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs font-semibold">
+                    <option value="">All Categories</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>
+                            {{ $cat }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Availability -->
+            <div class="md:col-span-2">
+                <select name="availability" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs font-semibold">
+                    <option value="open" {{ request('availability', 'open') == 'open' ? 'selected' : '' }}>Open Only</option>
+                    <option value="all" {{ request('availability') == 'all' ? 'selected' : '' }}>All Jobs</option>
+                    <option value="locked" {{ request('availability') == 'locked' ? 'selected' : '' }}>Locked Only</option>
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="md:col-span-2 flex items-center gap-2">
+                <button type="submit"
+                    class="w-full py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs shadow-sm transition-all">
+                    Search
+                </button>
+                @if(request()->hasAny(['search', 'category', 'location', 'job_type', 'availability', 'sort']))
+                    <a href="{{ route('jobs.index') }}" title="Reset"
+                        class="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors">
+                        Clear
+                    </a>
+                @endif
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Job Cards Grid -->
+    @if($jobs->isEmpty())
+        <div class="glass-panel p-12 text-center rounded-2xl border border-white/80">
+            <h3 class="text-base font-bold text-slate-900">No jobs found</h3>
+            <p class="text-xs text-slate-600 mt-1">Try adjusting your search filters.</p>
+            <a href="{{ route('jobs.index') }}" class="mt-4 inline-block px-4 py-2 rounded-xl bg-sky-500 text-white text-xs font-bold">
+                Show All Jobs
+            </a>
+        </div>
+    @else
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach($jobs as $job)
+                <div class="glass-card p-5 rounded-2xl flex flex-col justify-between border border-white/80">
+                    
+                    <div class="space-y-2.5">
+                        <!-- Category & Status -->
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded">
+                                {{ $job->category }}
+                            </span>
+
+                            @if($job->isLocked())
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">
+                                    Locked
+                                </span>
+                            @else
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
+                                    Open
+                                </span>
+                            @endif
+                        </div>
+
+                        <!-- Job Title -->
+                        <h3 class="text-base font-black text-slate-950 hover:text-sky-700 transition-colors line-clamp-2 leading-snug">
+                            <a href="{{ route('jobs.show', $job) }}">
+                                {{ $job->title }}
+                            </a>
+                        </h3>
+
+                        <!-- Employer Name -->
+                        <p class="text-xs font-bold text-slate-700">
+                            {{ $job->employer?->display_name ?? 'Employer' }}
+                        </p>
+
+                        <!-- Location -->
+                        <p class="text-xs text-slate-800 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-rose-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span class="truncate">{{ $job->location_address }}</span>
+                        </p>
+
+                        <!-- Salary & Job Type -->
+                        <div class="flex items-center justify-between text-xs font-bold pt-1">
+                            <span class="text-emerald-700">
+                                {{ $job->salary_range ?? 'Competitive Pay' }}
+                            </span>
+                            <span class="text-slate-500 font-semibold">
+                                {{ $job->job_type }}
+                            </span>
+                        </div>
+
+                        <!-- Capacity Bar -->
+                        <div class="pt-2 border-t border-slate-100">
+                            <div class="flex items-center justify-between text-xs font-bold text-slate-800 mb-1">
+                                <span>Workers:</span>
+                                <span class="{{ $job->isLocked() ? 'text-amber-800' : 'text-sky-800' }}">
+                                    {{ $job->workers_hired }} / {{ $job->workers_needed }} Hired
+                                </span>
+                            </div>
+                            <div class="w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                                <div class="h-full {{ $job->isLocked() ? 'bg-amber-500' : 'bg-sky-500' }}"
+                                    style="width: {{ $job->capacity_percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Single Clean Button -->
+                    <div class="mt-4 pt-3 border-t border-slate-100">
+                        <a href="{{ route('jobs.show', $job) }}"
+                            class="w-full py-2 px-3 rounded-xl {{ $job->isLocked() ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-sky-500 hover:bg-sky-600 text-white shadow-sm' }} font-bold text-xs flex items-center justify-center transition-colors">
+                            View Details & Apply
+                        </a>
+                    </div>
+
+                </div>
+            @endforeach
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-6">
+            {{ $jobs->links() }}
+        </div>
+    @endif
+
+</div>
+@endsection
