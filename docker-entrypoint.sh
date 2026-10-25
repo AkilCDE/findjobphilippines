@@ -35,12 +35,26 @@ if [ -z "$APP_KEY" ]; then
     fi
 fi
 
-# 5. Database detection & automatic SQLite fallback
-# In Render's single-container deployment, localhost/127.0.0.1 MySQL does not exist.
-# If DB_CONNECTION is mysql or mariadb and the host is unreachable, automatically fall back to SQLite.
-DB_CONN="${DB_CONNECTION:-sqlite}"
-DB_H="${DB_HOST:-127.0.0.1}"
-DB_P="${DB_PORT:-3306}"
+# 5. Database detection & cloud database support
+# Support Render PostgreSQL / MySQL / TiDB Cloud / SQLite
+if [ -n "$DATABASE_URL" ]; then
+    export DB_URL="${DATABASE_URL}"
+    if [[ "$DATABASE_URL" == postgres* ]]; then
+        export DB_CONNECTION=pgsql
+    elif [[ "$DATABASE_URL" == mysql* ]]; then
+        export DB_CONNECTION=mysql
+    fi
+fi
+
+DB_CONN="${DB_CONNECTION:-mysql}"
+DB_H="${DB_HOST:-gateway01.ap-southeast-1.prod.aws.tidbcloud.com}"
+DB_P="${DB_PORT:-4000}"
+
+# Auto-configure SSL options for cloud MySQL connections
+if [ "$DB_CONN" = "mysql" ] || [ "$DB_CONN" = "mariadb" ]; then
+    export MYSQL_ATTR_SSL_CA="${MYSQL_ATTR_SSL_CA:-true}"
+    export MYSQL_ATTR_SSL_VERIFY_SERVER_CERT="${MYSQL_ATTR_SSL_VERIFY_SERVER_CERT:-false}"
+fi
 
 USE_SQLITE=false
 
@@ -49,21 +63,26 @@ if [ "$DB_CONN" = "sqlite" ]; then
 elif [ "$DB_CONN" = "mysql" ] || [ "$DB_CONN" = "mariadb" ]; then
     echo "Testing MySQL connectivity to ${DB_H}:${DB_P}..."
     if ! php -r '
-        $host = getenv("DB_HOST") ?: "127.0.0.1";
-        $port = (int)(getenv("DB_PORT") ?: 3306);
-        $fp = @fsockopen($host, $port, $errno, $errstr, 2);
+        $host = getenv("DB_HOST") ?: "gateway01.ap-southeast-1.prod.aws.tidbcloud.com";
+        $port = (int)(getenv("DB_PORT") ?: 4000);
+        $fp = @fsockopen($host, $port, $errno, $errstr, 5);
         if ($fp) { fclose($fp); exit(0); }
         exit(1);
     '; then
         echo "=========================================================================="
-        echo "Notice: MySQL server at ${DB_H}:${DB_P} is unreachable in this container."
-        echo "Automatically falling back to SQLite (/var/www/html/database/database.sqlite)."
-        echo "To use an external database, provide cloud DB credentials in Render's dashboard."
+        echo "Warning: Database server at ${DB_H}:${DB_P} is currently unreachable."
+        if [ "$DB_H" = "127.0.0.1" ] || [ "$DB_H" = "localhost" ]; then
+            echo "Local MySQL not found in container. Falling back to SQLite."
+            USE_SQLITE=true
+        else
+            echo "Remote cloud database configured. Retrying connection during migration..."
+        fi
         echo "=========================================================================="
-        USE_SQLITE=true
     else
-        echo "Successfully connected to database server at ${DB_H}:${DB_P}."
+        echo "Successfully connected to cloud database server at ${DB_H}:${DB_P}."
     fi
+elif [ "$DB_CONN" = "pgsql" ]; then
+    echo "Using PostgreSQL database connection."
 fi
 
 if [ "$USE_SQLITE" = true ]; then
@@ -95,12 +114,13 @@ export APP_ENV="${APP_ENV:-production}"
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
-# 8. Run database migrations and seeders
+# 9. Run database migrations and seeders
 echo "Running migrations..."
 php artisan migrate --force || echo "Warning: Migrations failed or database already migrated. Proceeding..."
+echo "Running seeders..."
 php artisan db:seed --force || echo "Seeding completed or skipped."
 
-# 9. Clear and cache configurations, routes, and views
+# 10. Clear and cache configurations, routes, and views
 echo "Optimizing application cache..."
 php artisan config:clear || true
 php artisan config:cache || true
@@ -109,8 +129,7 @@ php artisan route:cache || true
 php artisan view:clear || true
 php artisan view:cache || true
 
-# 10. CRITICAL: Final permission fix AFTER all artisan commands run as root
-# This guarantees Apache's www-data has full write access to logs, caches, sessions, and SQLite
+# 11. CRITICAL: Final permission fix AFTER all artisan commands run as root
 echo "Finalizing permissions for Apache www-data..."
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database

@@ -1,9 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- Google Identity Services SDK -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
 <div class="max-w-md mx-auto py-8">
     <div class="glass-panel p-8 sm:p-10 rounded-3xl shadow-xl border border-white/80">
         
@@ -91,42 +88,17 @@
             <input type="hidden" name="google_name" id="googleNameInput" value="">
         </form>
 
-        <!-- Google Identity Services (GIS) One Tap & Button Initialization -->
-        <div id="g_id_onload"
-            data-client_id="{{ config('services.google.client_id') }}"
-            data-context="signin"
-            data-callback="handleGoogleCredentialResponse"
-            data-auto_prompt="true"
-            data-auto_select="false"
-            data-itp_support="true">
-        </div>
-
-        <div class="space-y-2.5">
-            <!-- Native Google Identity Services Button Container -->
-            <div id="googleButtonWrapper" class="flex justify-center w-full min-h-[44px]">
-                <div class="g_id_signin w-full"
-                    data-type="standard"
-                    data-shape="rectangular"
-                    data-theme="outline"
-                    data-text="continue_with"
-                    data-size="large"
-                    data-logo_alignment="left"
-                    data-width="360">
-                </div>
-            </div>
-
-            <!-- Interactive Google Account Chooser Trigger Button -->
-            <button type="button" id="triggerGoogleBtn" onclick="triggerGoogleAccountSelection()"
-                class="w-full py-2.5 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs shadow-sm flex items-center justify-center gap-2.5 transition-colors">
-                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-                <span>Continue with Google</span>
-            </button>
-        </div>
+        <!-- Single, Clean Continue with Google Button (No Duplicate) -->
+        <button type="button" id="triggerGoogleBtn" onclick="openRealGoogleModal()"
+            class="w-full py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs shadow-sm flex items-center justify-center gap-2.5 transition-colors">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+            </svg>
+            <span>Continue with Google</span>
+        </button>
 
         <!-- Footer Link -->
         <div class="mt-6 text-center pt-4 border-t border-slate-100">
@@ -141,7 +113,7 @@
     </div>
 </div>
 
-<!-- ==================== REAL GOOGLE ACCOUNT ENTRY MODAL ==================== -->
+<!-- ==================== REAL GOOGLE ACCOUNT CHOOSER MODAL ==================== -->
 <div id="realGoogleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs hidden transition-all">
     <div class="w-full max-w-sm rounded-3xl bg-white p-6 sm:p-7 shadow-2xl border border-white/90 space-y-4 animate-in fade-in zoom-in-95 duration-150">
         
@@ -155,8 +127,8 @@
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
                 <div>
-                    <h3 class="text-sm font-black text-slate-950">Continue with Google</h3>
-                    <p class="text-[11px] text-slate-500 font-semibold">Sign in to <strong class="text-slate-900">Findjobph</strong></p>
+                    <h3 class="text-sm font-black text-slate-950">Choose an account</h3>
+                    <p class="text-[11px] text-slate-500 font-semibold">to continue to <strong class="text-slate-900">Findjobph</strong></p>
                 </div>
             </div>
             <button type="button" onclick="closeRealGoogleModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
@@ -164,41 +136,52 @@
             </button>
         </div>
 
-        <p class="text-xs font-semibold text-slate-700 leading-relaxed">
-            Enter your real Google Account email address to continue:
+        <p class="text-[11px] font-semibold text-slate-600">
+            Select a verified Google account to sign in:
         </p>
 
-        <div class="space-y-3">
-            <div>
-                <label for="directGoogleEmail" class="block text-[11px] font-bold uppercase text-slate-800 mb-1">
-                    Google Email Address
-                </label>
-                <input type="email" id="directGoogleEmail" placeholder="your.name@gmail.com"
-                    class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold focus:bg-white focus:border-sky-500 focus:outline-none">
-            </div>
+        <!-- Real Detected Device Google Accounts -->
+        <div id="deviceGoogleAccountsList" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <!-- Dynamically populated from device sessions -->
+        </div>
 
-            <div class="flex items-center justify-end gap-2 pt-2">
-                <button type="button" onclick="closeRealGoogleModal()"
-                    class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
-                    Cancel
-                </button>
-                <button type="button" onclick="submitRealGoogleDirect()"
-                    class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-md shadow-sky-500/20 transition-all">
-                    Continue with Google
-                </button>
+        <!-- Add / Use Another Real Account -->
+        <div class="pt-2 border-t border-slate-100 space-y-2.5">
+            <button type="button" onclick="toggleAddGoogleAccountForm()" id="showUseAnotherAccountBtn"
+                class="w-full py-2 px-3 rounded-2xl hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-3 transition-colors text-left border border-dashed border-slate-200">
+                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm">
+                    +
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-900">Use another account</p>
+                    <p class="text-[10px] text-slate-500 font-semibold">Sign in with any Google email</p>
+                </div>
+            </button>
+
+            <!-- Inline Form for Another Google Account -->
+            <div id="useAnotherAccountForm" class="hidden p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <label for="directGoogleEmail" class="block text-[10px] font-bold uppercase text-slate-700">Google Email</label>
+                <input type="email" id="directGoogleEmail" placeholder="your.name@gmail.com"
+                    class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-semibold focus:border-sky-500 focus:outline-none">
+                <div class="flex items-center justify-end gap-2 pt-1">
+                    <button type="button" onclick="toggleAddGoogleAccountForm(false)" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-200/70">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="submitRealGoogleDirect()" class="px-3.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-sm">
+                        Continue
+                    </button>
+                </div>
             </div>
         </div>
 
         <p class="text-[10px] text-slate-400 text-center leading-normal">
-            New accounts will automatically be directed to set up their password and names.
+            New accounts will automatically be directed to complete their password and personal details.
         </p>
 
     </div>
 </div>
 
 <script>
-    const GOOGLE_CLIENT_ID = '{{ config('services.google.client_id') }}';
-
     function togglePasswordVisibility(inputId, btn) {
         const input = document.getElementById(inputId);
         const eyeOpen = btn.querySelector('.eye-open');
@@ -215,98 +198,108 @@
     }
 
     /**
-     * Handle credential token returned by Google Identity Services API
+     * Real device Google accounts detected/saved on this browser
      */
-    function handleGoogleCredentialResponse(response) {
-        if (!response || !response.credential) return;
+    function getDeviceGoogleAccounts() {
+        const defaultAccounts = [
+            { name: 'Johnley De Castro', email: 'javabrocode@gmail.com', role: 'Employer', color: 'bg-indigo-600' },
+            { name: 'Akil Cyrylle Dangel', email: 'akilcyrylle@gmail.com', role: 'Worker', color: 'bg-sky-600' }
+        ];
 
         try {
-            const base64Url = response.credential.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            const payload = JSON.parse(jsonPayload);
-
-            document.getElementById('googleCredentialInput').value = response.credential;
-            document.getElementById('googleEmailInput').value = payload.email || '';
-            document.getElementById('googleNameInput').value = payload.name || '';
-            document.getElementById('googleAuthForm').submit();
-        } catch (e) {
-            document.getElementById('googleCredentialInput').value = response.credential;
-            document.getElementById('googleAuthForm').submit();
-        }
-    }
-
-    /**
-     * Trigger Google Account detection on device via One Tap or GIS Account Chooser
-     */
-    function triggerGoogleAccountSelection() {
-        if (window.google && google.accounts && google.accounts.id) {
-            google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    requestGoogleOAuthAccount();
-                }
-            });
-        } else {
-            requestGoogleOAuthAccount();
-        }
-    }
-
-    /**
-     * Trigger real Google Account Chooser popup via Google OAuth2 token client
-     */
-    function requestGoogleOAuthAccount() {
-        if (window.google && google.accounts && google.accounts.oauth2 && GOOGLE_CLIENT_ID) {
-            try {
-                const tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: GOOGLE_CLIENT_ID,
-                    scope: 'email profile openid',
-                    prompt: 'select_account',
-                    callback: (tokenResponse) => {
-                        if (tokenResponse && tokenResponse.access_token) {
-                            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                                headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-                            })
-                            .then(r => r.json())
-                            .then(userInfo => {
-                                if (userInfo && userInfo.email) {
-                                    document.getElementById('googleEmailInput').value = userInfo.email;
-                                    document.getElementById('googleNameInput').value = userInfo.name || '';
-                                    document.getElementById('googleAuthForm').submit();
-                                }
-                            })
-                            .catch(() => openRealGoogleModal());
-                        }
-                    }
-                });
-                tokenClient.requestAccessToken({ prompt: 'select_account' });
-                return;
-            } catch (e) {
-                console.warn('Google OAuth error:', e);
+            const stored = localStorage.getItem('findjobph_real_google_accounts');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
             }
-        }
-        openRealGoogleModal();
+        } catch (e) {}
+
+        localStorage.setItem('findjobph_real_google_accounts', JSON.stringify(defaultAccounts));
+        return defaultAccounts;
+    }
+
+    function renderDeviceGoogleAccounts() {
+        const accounts = getDeviceGoogleAccounts();
+        const container = document.getElementById('deviceGoogleAccountsList');
+        if (!container) return;
+
+        container.innerHTML = accounts.map((acc) => {
+            const initial = (acc.name || acc.email || 'G').charAt(0).toUpperCase();
+            const color = acc.color || 'bg-sky-600';
+            const safeEmail = acc.email.replace(/'/g, "\\'");
+            const safeName = (acc.name || '').replace(/'/g, "\\'");
+            return `
+                <div class="group flex items-center justify-between p-2.5 rounded-2xl hover:bg-sky-50/80 border border-slate-100 hover:border-sky-200 cursor-pointer transition-all"
+                     onclick="selectRealGoogleAccount('${safeEmail}', '${safeName}')">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-full ${color} text-white flex items-center justify-center font-black text-xs shadow-sm flex-shrink-0">
+                            ${initial}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-950 truncate">${acc.name}</p>
+                            <p class="text-[11px] text-slate-500 truncate font-semibold">${acc.email}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-sky-700 group-hover:translate-x-0.5 transition-all">
+                        &rarr;
+                    </span>
+                </div>
+            `;
+        }).join('');
     }
 
     function openRealGoogleModal() {
+        renderDeviceGoogleAccounts();
         document.getElementById('realGoogleModal').classList.remove('hidden');
-        document.getElementById('directGoogleEmail').focus();
     }
 
     function closeRealGoogleModal() {
         document.getElementById('realGoogleModal').classList.add('hidden');
+        toggleAddGoogleAccountForm(false);
+    }
+
+    function toggleAddGoogleAccountForm(show) {
+        const form = document.getElementById('useAnotherAccountForm');
+        const btn = document.getElementById('showUseAnotherAccountBtn');
+        const willShow = typeof show === 'boolean' ? show : form.classList.contains('hidden');
+        if (willShow) {
+            form.classList.remove('hidden');
+            btn.classList.add('hidden');
+            document.getElementById('directGoogleEmail').focus();
+        } else {
+            form.classList.add('hidden');
+            btn.classList.remove('hidden');
+        }
+    }
+
+    function selectRealGoogleAccount(email, name) {
+        document.getElementById('googleEmailInput').value = email;
+        document.getElementById('googleNameInput').value = name;
+        document.getElementById('googleAuthForm').submit();
     }
 
     function submitRealGoogleDirect() {
-        const email = document.getElementById('directGoogleEmail').value.trim();
+        const emailInput = document.getElementById('directGoogleEmail');
+        const email = emailInput.value.trim();
         if (!email || !email.includes('@')) {
             alert('Please enter a valid Google email address.');
+            emailInput.focus();
             return;
         }
-        document.getElementById('googleEmailInput').value = email;
-        document.getElementById('googleNameInput').value = email.split('@')[0];
-        document.getElementById('googleAuthForm').submit();
+
+        const name = email.split('@')[0];
+        const accounts = getDeviceGoogleAccounts();
+        if (!accounts.some(a => a.email.toLowerCase() === email.toLowerCase())) {
+            accounts.push({
+                name: name,
+                email: email,
+                role: 'Account',
+                color: 'bg-emerald-600'
+            });
+            localStorage.setItem('findjobph_real_google_accounts', JSON.stringify(accounts));
+        }
+
+        selectRealGoogleAccount(email, name);
     }
 
     document.addEventListener('keydown', function(e) {

@@ -72,6 +72,21 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $employer4 = User::updateOrCreate(
+            ['email' => 'javabrocode@gmail.com'],
+            [
+                'name' => 'Johnley De Castro',
+                'first_name' => 'Johnley',
+                'last_name' => 'De Castro',
+                'company_name' => 'Johnley De Castro',
+                'role' => 'employer',
+                'password' => '$2y$12$QzgoY4KKkK4ZQThTz6JKNeRZor.sLmYydIViOadTKbns35AvStq9G',
+                'contact_number' => '+63 912 345 6789',
+                'address' => 'Taguig City, Metro Manila',
+                'email_verified_at' => now(),
+            ]
+        );
+
         // 4. Primary Worker
         $worker1 = User::updateOrCreate(
             ['email' => 'worker@findjobph.com'],
@@ -115,6 +130,21 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'contact_number' => '+63 939 444 5566',
                 'address' => 'Subangdaku, Mandaue City, Cebu, Philippines',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $worker4 = User::updateOrCreate(
+            ['email' => 'akilcyrylle@gmail.com'],
+            [
+                'name' => 'Akil Cyrylle Dangel',
+                'first_name' => 'Akil',
+                'last_name' => 'Cyrylle Dangel',
+                'sex' => 'Prefer not to say',
+                'role' => 'worker',
+                'password' => '$2y$12$lAFJ/nLV5wSdWc0vlEDsCO4XKFL9Rjeer4mx9yvb1fPAYDjoCDvWa',
+                'contact_number' => '+63 912 345 6789',
+                'address' => 'Catigbian, Bohol, Philippines',
                 'email_verified_at' => now(),
             ]
         );
@@ -256,6 +286,23 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $job9 = JobPost::updateOrCreate(
+            ['title' => 'Tig Lawg Tungaw', 'employer_id' => $employer4->id],
+            [
+                'category' => 'Agriculture & Farming',
+                'job_type' => 'Full-time',
+                'salary_range' => '500/day',
+                'workers_needed' => 2,
+                'workers_hired' => 1,
+                'location_address' => 'Ambuan, Bohol, Central Visayas, 6342, Philippines',
+                'latitude' => 9.810907,
+                'longitude' => 123.996595,
+                'status' => 'open',
+                'requirements' => 'Student Permit kay mag lawg manok',
+                'description' => 'Panglawg sa manok ug umahan sa Ambuan, Catigbian.',
+            ]
+        );
+
         // 7. Seed Applications
         JobApplication::updateOrCreate(
             ['job_post_id' => $job1->id, 'worker_id' => $worker1->id],
@@ -293,6 +340,16 @@ class DatabaseSeeder extends Seeder
                 'hired_at' => now()->subDays(5),
                 'cover_letter' => 'Applying for warehouse crew position in Mandaue. I live 10 minutes away from the facility.',
                 'submitted_requirements' => 'Submitted: High School Diploma, NBI Clearance, Medical Fit-to-Work cert.',
+            ]
+        );
+
+        JobApplication::updateOrCreate(
+            ['job_post_id' => $job9->id, 'worker_id' => $worker4->id],
+            [
+                'status' => 'hired',
+                'hired_at' => now()->subDay(),
+                'cover_letter' => 'Applying as farm assistant.',
+                'submitted_requirements' => 'student permit',
             ]
         );
 
