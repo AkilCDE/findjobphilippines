@@ -95,36 +95,56 @@ class AdminController extends Controller
      */
     public function users(Request $request): View
     {
-        $query = User::withCount(['jobPosts', 'applications']);
-
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('contact_number', 'like', "%{$search}%")
-                    ->orWhere('address', 'like', "%{$search}%")
-                    ->orWhere('company_name', 'like', "%{$search}%");
-            });
-        }
-
-        if ($role = $request->input('role')) {
-            if ($role !== 'all') {
-                $query->where('role', $role);
+        $applyFilters = function ($q) use ($request) {
+            if ($search = $request->input('search')) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('contact_number', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%")
+                        ->orWhere('company_name', 'like', "%{$search}%");
+                });
             }
-        }
 
-        $sort = $request->input('sort', 'latest');
-        if ($sort === 'name') {
-            $query->orderBy('name');
-        } elseif ($sort === 'role') {
-            $query->orderBy('role')->orderBy('name');
-        } else {
-            $query->latest();
-        }
+            $sort = $request->input('sort', 'latest');
+            if ($sort === 'name') {
+                $q->orderBy('name');
+            } else {
+                $q->latest();
+            }
+        };
 
-        $users = $query->paginate(12)->withQueryString();
+        // Query separated containers: Employers and Workers
+        $employersQuery = User::where('role', 'employer')->withCount(['jobPosts', 'applications']);
+        $applyFilters($employersQuery);
+        $employers = $employersQuery->paginate(10, ['*'], 'employers_page')->withQueryString();
 
-        return view('admin.users.index', compact('users'));
+        $workersQuery = User::where('role', 'worker')->withCount(['jobPosts', 'applications']);
+        $applyFilters($workersQuery);
+        $workers = $workersQuery->paginate(10, ['*'], 'workers_page')->withQueryString();
+
+        $adminsQuery = User::where('role', 'admin')->withCount(['jobPosts', 'applications']);
+        $applyFilters($adminsQuery);
+        $admins = $adminsQuery->get();
+
+        $totalUsers = User::count();
+        $employersCount = User::where('role', 'employer')->count();
+        $workersCount = User::where('role', 'worker')->count();
+
+        // Also maintain $users for backwards compatibility
+        $usersQuery = User::withCount(['jobPosts', 'applications']);
+        $applyFilters($usersQuery);
+        $users = $usersQuery->paginate(12)->withQueryString();
+
+        return view('admin.users.index', compact(
+            'employers',
+            'workers',
+            'admins',
+            'totalUsers',
+            'employersCount',
+            'workersCount',
+            'users'
+        ));
     }
 
     /**

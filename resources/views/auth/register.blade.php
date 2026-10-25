@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Google Identity Services SDK -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <div class="max-w-xl mx-auto py-8">
     <div class="glass-panel p-8 sm:p-10 rounded-3xl shadow-xl border border-white/80">
         
@@ -67,7 +70,7 @@
                             First Name <span class="text-red-500">*</span>
                         </label>
                         <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $prefillFirst) }}"
-                            placeholder="Juan"
+                            placeholder="First Name"
                             class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
                     </div>
                     <div>
@@ -75,7 +78,7 @@
                             Last Name <span class="text-red-500">*</span>
                         </label>
                         <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $prefillLast) }}"
-                            placeholder="Dela Cruz"
+                            placeholder="Last Name"
                             class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
                     </div>
                 </div>
@@ -194,24 +197,52 @@
             <div class="flex-grow border-t border-slate-200"></div>
         </div>
 
-        <!-- Continue with Google Button -->
-        <form method="POST" action="{{ route('auth.google') }}" id="googleRegisterForm">
+        <!-- Hidden Google Auth Form -->
+        <form method="POST" action="{{ route('auth.google') }}" id="googleAuthForm" class="hidden">
             @csrf
             <input type="hidden" name="flow" value="register">
             <input type="hidden" name="google_role" id="googleRoleField" value="{{ old('role', $defaultRole ?? 'worker') }}">
-            <input type="hidden" name="google_email" id="googleRegisterEmail" value="">
-            <input type="hidden" name="google_name" id="googleRegisterName" value="">
-            <button type="button" onclick="openGoogleRegisterModal()"
+            <input type="hidden" name="credential" id="googleCredentialInput" value="">
+            <input type="hidden" name="google_email" id="googleEmailInput" value="">
+            <input type="hidden" name="google_name" id="googleNameInput" value="">
+        </form>
+
+        <!-- Google Identity Services (GIS) One Tap & Button Initialization -->
+        <div id="g_id_onload"
+            data-client_id="{{ config('services.google.client_id') }}"
+            data-context="signup"
+            data-callback="handleGoogleCredentialResponse"
+            data-auto_prompt="true"
+            data-auto_select="false"
+            data-itp_support="true">
+        </div>
+
+        <div class="space-y-2.5">
+            <!-- Native Google Identity Services Button Container -->
+            <div id="googleButtonWrapper" class="flex justify-center w-full min-h-[44px]">
+                <div class="g_id_signin w-full"
+                    data-type="standard"
+                    data-shape="rectangular"
+                    data-theme="outline"
+                    data-text="continue_with"
+                    data-size="large"
+                    data-logo_alignment="left"
+                    data-width="360">
+                </div>
+            </div>
+
+            <!-- Interactive Google Account Chooser Trigger Button -->
+            <button type="button" id="triggerGoogleBtn" onclick="triggerGoogleAccountSelection()"
                 class="w-full py-2.5 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs shadow-sm flex items-center justify-center gap-2.5 transition-colors">
-                <svg class="w-4 h-4" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
-                Continue with Google
+                <span>Continue with Google</span>
             </button>
-        </form>
+        </div>
 
         <!-- Footer Link -->
         <div class="mt-6 text-center pt-4 border-t border-slate-100">
@@ -226,8 +257,8 @@
     </div>
 </div>
 
-<!-- ==================== GOOGLE ACCOUNT CHOOSER MODAL ==================== -->
-<div id="googleRegisterModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs hidden transition-all">
+<!-- ==================== REAL GOOGLE ACCOUNT ENTRY MODAL ==================== -->
+<div id="realGoogleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs hidden transition-all">
     <div class="w-full max-w-sm rounded-3xl bg-white p-6 sm:p-7 shadow-2xl border border-white/90 space-y-4 animate-in fade-in zoom-in-95 duration-150">
         
         <!-- Google Header -->
@@ -240,52 +271,37 @@
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
                 <div>
-                    <h3 class="text-sm font-black text-slate-950">Choose an account</h3>
-                    <p class="text-[11px] text-slate-500 font-semibold">to continue to <strong class="text-slate-900">Findjobph</strong></p>
+                    <h3 class="text-sm font-black text-slate-950">Continue with Google</h3>
+                    <p class="text-[11px] text-slate-500 font-semibold">Sign up to <strong class="text-slate-900">Findjobph</strong></p>
                 </div>
             </div>
-            <button type="button" onclick="closeGoogleRegisterModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
+            <button type="button" onclick="closeRealGoogleModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
 
-        <p class="text-[11px] font-semibold text-slate-600">
-            Select an existing account in your browser, or add another account:
+        <p class="text-xs font-semibold text-slate-700 leading-relaxed">
+            Enter your real Google Account email address to continue:
         </p>
 
-        <!-- Accounts List Stored in Browser -->
-        <div id="googleRegisterAccountsList" class="space-y-2 max-h-56 overflow-y-auto pr-1">
-            <!-- Dynamically populated from browser localStorage -->
-        </div>
+        <div class="space-y-3">
+            <div>
+                <label for="directGoogleEmail" class="block text-[11px] font-bold uppercase text-slate-800 mb-1">
+                    Google Email Address
+                </label>
+                <input type="email" id="directGoogleEmail" placeholder="your.name@gmail.com"
+                    class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold focus:bg-white focus:border-sky-500 focus:outline-none">
+            </div>
 
-        <!-- Add Another Account Button & Form -->
-        <div class="pt-2 border-t border-slate-100 space-y-2.5">
-            <button type="button" onclick="toggleAddGoogleRegisterAccountForm()" id="showAddRegisterAccountBtn"
-                class="w-full py-2 px-3 rounded-2xl hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-3 transition-colors text-left border border-dashed border-slate-200">
-                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm">
-                    +
-                </div>
-                <div>
-                    <p class="text-xs font-bold text-slate-900">Use another account</p>
-                    <p class="text-[10px] text-slate-500 font-semibold">Add account to this browser</p>
-                </div>
-            </button>
-
-            <!-- Inline Add Account Form -->
-            <div id="addRegisterAccountForm" class="hidden p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <p class="text-[10px] font-bold text-slate-700 uppercase">Add Google Account</p>
-                <input type="text" id="newRegisterAccountName" placeholder="Full Name (e.g. Alex Reyes)"
-                    class="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-semibold">
-                <input type="email" id="newRegisterAccountEmail" placeholder="Google Email (e.g. alex.reyes@gmail.com)"
-                    class="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-semibold">
-                <div class="flex items-center justify-end gap-2 pt-1">
-                    <button type="button" onclick="toggleAddGoogleRegisterAccountForm(false)" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-200/70">
-                        Cancel
-                    </button>
-                    <button type="button" onclick="saveAndSelectNewGoogleRegisterAccount()" class="px-3.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-sm">
-                        Add & Continue
-                    </button>
-                </div>
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" onclick="closeRealGoogleModal()"
+                    class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="submitRealGoogleDirect()"
+                    class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-md shadow-sky-500/20 transition-all">
+                    Continue with Google
+                </button>
             </div>
         </div>
 
@@ -297,6 +313,8 @@
 </div>
 
 <script>
+    const GOOGLE_CLIENT_ID = '{{ config('services.google.client_id') }}';
+
     function switchRole(role) {
         const roleInput = document.getElementById('roleInput');
         const googleRoleField = document.getElementById('googleRoleField');
@@ -346,108 +364,103 @@
         }
     }
 
-    const DEFAULT_GOOGLE_ACCOUNTS = [
-        { name: 'Juan Dela Cruz', email: 'juandelacruz@gmail.com', avatarColor: 'bg-blue-600' },
-        { name: 'Maria Santos', email: 'mariasantos.ph@gmail.com', avatarColor: 'bg-emerald-600' }
-    ];
+    /**
+     * Handle credential token returned by Google Identity Services API
+     */
+    function handleGoogleCredentialResponse(response) {
+        if (!response || !response.credential) return;
 
-    function getBrowserGoogleAccounts() {
         try {
-            const stored = localStorage.getItem('findjobph_google_accounts');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-            }
-        } catch (e) {}
-        localStorage.setItem('findjobph_google_accounts', JSON.stringify(DEFAULT_GOOGLE_ACCOUNTS));
-        return DEFAULT_GOOGLE_ACCOUNTS;
-    }
+            const base64Url = response.credential.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            const payload = JSON.parse(jsonPayload);
 
-    function renderGoogleRegisterAccounts() {
-        const accounts = getBrowserGoogleAccounts();
-        const container = document.getElementById('googleRegisterAccountsList');
-        if (!container) return;
-
-        container.innerHTML = accounts.map((acc) => {
-            const initial = (acc.name || acc.email || 'G').charAt(0).toUpperCase();
-            const color = acc.avatarColor || 'bg-sky-600';
-            const safeEmail = acc.email.replace(/'/g, "\\'");
-            const safeName = (acc.name || '').replace(/'/g, "\\'");
-            return `
-                <div class="group flex items-center justify-between p-2.5 rounded-2xl hover:bg-sky-50/80 border border-slate-100 hover:border-sky-200 cursor-pointer transition-all"
-                     onclick="selectGoogleRegisterAccount('${safeEmail}', '${safeName}')">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 rounded-full ${color} text-white flex items-center justify-center font-black text-xs shadow-sm flex-shrink-0">
-                            ${initial}
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-xs font-bold text-slate-950 truncate">${acc.name}</p>
-                            <p class="text-[11px] text-slate-500 truncate font-semibold">${acc.email}</p>
-                        </div>
-                    </div>
-                    <span class="text-[11px] font-bold text-sky-700 group-hover:text-sky-900 group-hover:translate-x-0.5 transition-all">
-                        &rarr;
-                    </span>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function openGoogleRegisterModal() {
-        renderGoogleRegisterAccounts();
-        document.getElementById('googleRegisterModal').classList.remove('hidden');
-    }
-
-    function closeGoogleRegisterModal() {
-        document.getElementById('googleRegisterModal').classList.add('hidden');
-        toggleAddGoogleRegisterAccountForm(false);
-    }
-
-    function toggleAddGoogleRegisterAccountForm(show) {
-        const form = document.getElementById('addRegisterAccountForm');
-        const btn = document.getElementById('showAddRegisterAccountBtn');
-        const willShow = typeof show === 'boolean' ? show : form.classList.contains('hidden');
-        if (willShow) {
-            form.classList.remove('hidden');
-            btn.classList.add('hidden');
-            document.getElementById('newRegisterAccountName').focus();
-        } else {
-            form.classList.add('hidden');
-            btn.classList.remove('hidden');
+            document.getElementById('googleCredentialInput').value = response.credential;
+            document.getElementById('googleEmailInput').value = payload.email || '';
+            document.getElementById('googleNameInput').value = payload.name || '';
+            document.getElementById('googleRoleField').value = document.getElementById('roleInput').value || 'worker';
+            document.getElementById('googleAuthForm').submit();
+        } catch (e) {
+            document.getElementById('googleCredentialInput').value = response.credential;
+            document.getElementById('googleRoleField').value = document.getElementById('roleInput').value || 'worker';
+            document.getElementById('googleAuthForm').submit();
         }
     }
 
-    function selectGoogleRegisterAccount(email, name) {
-        const role = document.getElementById('roleInput').value || 'worker';
-        document.getElementById('googleRegisterEmail').value = email;
-        document.getElementById('googleRegisterName').value = name;
-        document.getElementById('googleRoleField').value = role;
-        document.getElementById('googleRegisterForm').submit();
+    /**
+     * Trigger Google Account detection on device via One Tap or GIS Account Chooser
+     */
+    function triggerGoogleAccountSelection() {
+        if (window.google && google.accounts && google.accounts.id) {
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    requestGoogleOAuthAccount();
+                }
+            });
+        } else {
+            requestGoogleOAuthAccount();
+        }
     }
 
-    function saveAndSelectNewGoogleRegisterAccount() {
-        const nameInput = document.getElementById('newRegisterAccountName');
-        const emailInput = document.getElementById('newRegisterAccountEmail');
-        const email = emailInput.value.trim();
-        const name = nameInput.value.trim() || email.split('@')[0];
+    /**
+     * Trigger real Google Account Chooser popup via Google OAuth2 token client
+     */
+    function requestGoogleOAuthAccount() {
+        if (window.google && google.accounts && google.accounts.oauth2 && GOOGLE_CLIENT_ID) {
+            try {
+                const tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: 'email profile openid',
+                    prompt: 'select_account',
+                    callback: (tokenResponse) => {
+                        if (tokenResponse && tokenResponse.access_token) {
+                            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                                headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                            })
+                            .then(r => r.json())
+                            .then(userInfo => {
+                                if (userInfo && userInfo.email) {
+                                    document.getElementById('googleEmailInput').value = userInfo.email;
+                                    document.getElementById('googleNameInput').value = userInfo.name || '';
+                                    document.getElementById('googleRoleField').value = document.getElementById('roleInput').value || 'worker';
+                                    document.getElementById('googleAuthForm').submit();
+                                }
+                            })
+                            .catch(() => openRealGoogleModal());
+                        }
+                    }
+                });
+                tokenClient.requestAccessToken({ prompt: 'select_account' });
+                return;
+            } catch (e) {
+                console.warn('Google OAuth error:', e);
+            }
+        }
+        openRealGoogleModal();
+    }
 
+    function openRealGoogleModal() {
+        document.getElementById('realGoogleModal').classList.remove('hidden');
+        document.getElementById('directGoogleEmail').focus();
+    }
+
+    function closeRealGoogleModal() {
+        document.getElementById('realGoogleModal').classList.add('hidden');
+    }
+
+    function submitRealGoogleDirect() {
+        const email = document.getElementById('directGoogleEmail').value.trim();
         if (!email || !email.includes('@')) {
             alert('Please enter a valid Google email address.');
-            emailInput.focus();
             return;
         }
-
-        const accounts = getBrowserGoogleAccounts();
-        if (!accounts.some(a => a.email.toLowerCase() === email.toLowerCase())) {
-            accounts.push({
-                name: name,
-                email: email,
-                avatarColor: 'bg-purple-600'
-            });
-            localStorage.setItem('findjobph_google_accounts', JSON.stringify(accounts));
-        }
-
-        selectGoogleRegisterAccount(email, name);
+        document.getElementById('googleEmailInput').value = email;
+        document.getElementById('googleNameInput').value = email.split('@')[0];
+        document.getElementById('googleRoleField').value = document.getElementById('roleInput').value || 'worker';
+        document.getElementById('googleAuthForm').submit();
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -457,7 +470,7 @@
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            closeGoogleRegisterModal();
+            closeRealGoogleModal();
         }
     });
 </script>

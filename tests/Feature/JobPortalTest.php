@@ -666,4 +666,67 @@ class JobPortalTest extends TestCase
             'title' => 'Employer 1 Post',
         ]);
     }
+
+    public function test_admin_sidebar_navbar_persists_on_messages_job_portal_and_philippine_map(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'email' => 'superadmin@example.com',
+        ]);
+
+        // 1. Direct Messages
+        $msgResponse = $this->actingAs($admin)->get('/messages');
+        $msgResponse->assertStatus(200);
+        $msgResponse->assertSee('id="adminSidebar"', false);
+        $msgResponse->assertSee('Admin Portal');
+
+        // 2. Job Portal
+        $jobsResponse = $this->actingAs($admin)->get('/jobs');
+        $jobsResponse->assertStatus(200);
+        $jobsResponse->assertSee('id="adminSidebar"', false);
+        $jobsResponse->assertSee('Admin Portal');
+
+        // 3. Philippine Map
+        $mapResponse = $this->actingAs($admin)->get('/jobs/map');
+        $mapResponse->assertStatus(200);
+        $mapResponse->assertSee('id="adminSidebar"', false);
+        $mapResponse->assertSee('Admin Portal');
+    }
+
+    public function test_admin_user_management_displays_separated_employer_and_worker_containers(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->create(['role' => 'employer', 'company_name' => 'Bohol Tech Ventures']);
+        User::factory()->create(['role' => 'worker', 'first_name' => 'Pedro', 'last_name' => 'Penduko']);
+
+        $response = $this->actingAs($admin)->get('/admin/users');
+        $response->assertStatus(200);
+        $response->assertSee('Registered Employers');
+        $response->assertSee('Registered Workers');
+        $response->assertSee('Bohol Tech Ventures');
+        $response->assertSee('Pedro Penduko');
+    }
+
+    public function test_google_auth_accepts_gis_jwt_credential(): void
+    {
+        $header = rtrim(strtr(base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT'])), '+/', '-_'), '=');
+        $payloadData = [
+            'email' => 'device.google.user@gmail.com',
+            'name' => 'Google Device User',
+            'sub' => '1234567890',
+        ];
+        $payload = rtrim(strtr(base64_encode(json_encode($payloadData)), '+/', '-_'), '=');
+        $signature = 'dummySignature';
+        $dummyJwt = "{$header}.{$payload}.{$signature}";
+
+        $response = $this->post('/auth/google', [
+            'credential' => $dummyJwt,
+            'google_role' => 'worker',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('google_setup', true);
+        $this->assertTrue(str_contains($response->headers->get('Location'), 'device.google.user%40gmail.com') || str_contains($response->headers->get('Location'), 'device.google.user@gmail.com'));
+        $this->assertGuest();
+    }
 }

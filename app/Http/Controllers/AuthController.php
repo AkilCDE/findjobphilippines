@@ -213,6 +213,20 @@ class AuthController extends Controller
         $name = trim((string) $request->input('google_name'));
         $role = $request->input('google_role', 'worker');
 
+        // Support official Google Identity Services JWT ID token credential
+        if ($request->filled('credential')) {
+            $jwt = (string) $request->input('credential');
+            $parts = explode('.', $jwt);
+            if (count($parts) === 3) {
+                $payloadJson = base64_decode(strtr($parts[1], '-_', '+/'));
+                $payload = json_decode($payloadJson, true);
+                if (is_array($payload) && ! empty($payload['email'])) {
+                    $email = trim((string) $payload['email']);
+                    $name = trim((string) ($payload['name'] ?? ''));
+                }
+            }
+        }
+
         if (! $email) {
             return back()->with('error', 'Please choose a Google account to continue.');
         }
