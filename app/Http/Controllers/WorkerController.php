@@ -7,6 +7,8 @@ use App\Models\JobPost;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class WorkerController extends Controller
@@ -80,14 +82,32 @@ class WorkerController extends Controller
 
             // Re-apply if previously rejected or resigned
             $validated = $request->validate([
-                'submitted_requirements' => ['required', 'string', 'min:5'],
+                'submitted_requirements' => ['required', 'string', 'min:3'],
                 'cover_letter' => ['nullable', 'string', 'max:2000'],
-                'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:5120'],
+                'requirements_photo' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,webp', 'max:10240'],
+                'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,webp', 'max:10240'],
+                'selfie_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+                'selfie_data' => ['nullable', 'string'],
             ]);
 
             $attachmentPath = $existing->attachment_path;
-            if ($request->hasFile('attachment')) {
-                $attachmentPath = $request->file('attachment')->store('applications', 'public');
+            if ($request->hasFile('requirements_photo')) {
+                $attachmentPath = $request->file('requirements_photo')->store('requirements', 'public');
+            } elseif ($request->hasFile('attachment')) {
+                $attachmentPath = $request->file('attachment')->store('requirements', 'public');
+            }
+
+            $selfiePath = $existing->selfie_path;
+            if (! empty($validated['selfie_data']) && str_starts_with($validated['selfie_data'], 'data:image')) {
+                $base64Image = preg_replace('#^data:image/\w+;base64,#i', '', $validated['selfie_data']);
+                $imageData = base64_decode($base64Image);
+                if ($imageData) {
+                    $filename = 'selfie_'.$user->id.'_'.time().'_'.Str::random(8).'.jpg';
+                    Storage::disk('public')->put('selfies/'.$filename, $imageData);
+                    $selfiePath = 'selfies/'.$filename;
+                }
+            } elseif ($request->hasFile('selfie_file')) {
+                $selfiePath = $request->file('selfie_file')->store('selfies', 'public');
             }
 
             $existing->update([
@@ -95,6 +115,7 @@ class WorkerController extends Controller
                 'submitted_requirements' => $validated['submitted_requirements'],
                 'cover_letter' => $validated['cover_letter'] ?? null,
                 'attachment_path' => $attachmentPath,
+                'selfie_path' => $selfiePath,
                 'leave_reason' => null,
                 'leave_requested_at' => null,
                 'termination_reason' => null,
@@ -102,18 +123,51 @@ class WorkerController extends Controller
             ]);
 
             return redirect()->route('worker.applications')
-                ->with('success', "Your application for '{$jobPost->title}' has been re-submitted successfully to {$jobPost->employer?->display_name}!");
+                ->with('success', "Your application for '{$jobPost->title}' has been re-submitted successfully with verified selfie and requirements to {$jobPost->employer?->display_name}!");
         }
 
-        $validated = $request->validate([
-            'submitted_requirements' => ['required', 'string', 'min:5'],
+        // Enforce mandatory requirement photo and live camera selfie
+        $rules = [
+            'submitted_requirements' => ['required', 'string', 'min:3'],
             'cover_letter' => ['nullable', 'string', 'max:2000'],
-            'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:5120'],
+            'requirements_photo' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,webp', 'max:10240'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,webp', 'max:10240'],
+            'selfie_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'selfie_data' => ['nullable', 'string'],
+        ];
+
+        if (! $request->hasFile('requirements_photo') && ! $request->hasFile('attachment')) {
+            $rules['requirements_photo'] = ['required', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,webp', 'max:10240'];
+        }
+
+        $hasSelfieData = ! empty($request->input('selfie_data')) && str_starts_with($request->input('selfie_data'), 'data:image');
+        if (! $hasSelfieData && ! $request->hasFile('selfie_file')) {
+            $rules['selfie_file'] = ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
+        }
+
+        $validated = $request->validate($rules, [
+            'requirements_photo.required' => 'Please upload a clear photo of your requirements or documents.',
+            'selfie_file.required' => 'Please take a live selfie with your camera to confirm applicant identity.',
         ]);
 
         $attachmentPath = null;
-        if ($request->hasFile('attachment')) {
-            $attachmentPath = $request->file('attachment')->store('applications', 'public');
+        if ($request->hasFile('requirements_photo')) {
+            $attachmentPath = $request->file('requirements_photo')->store('requirements', 'public');
+        } elseif ($request->hasFile('attachment')) {
+            $attachmentPath = $request->file('attachment')->store('requirements', 'public');
+        }
+
+        $selfiePath = null;
+        if (! empty($validated['selfie_data']) && str_starts_with($validated['selfie_data'], 'data:image')) {
+            $base64Image = preg_replace('#^data:image/\w+;base64,#i', '', $validated['selfie_data']);
+            $imageData = base64_decode($base64Image);
+            if ($imageData) {
+                $filename = 'selfie_'.$user->id.'_'.time().'_'.Str::random(8).'.jpg';
+                Storage::disk('public')->put('selfies/'.$filename, $imageData);
+                $selfiePath = 'selfies/'.$filename;
+            }
+        } elseif ($request->hasFile('selfie_file')) {
+            $selfiePath = $request->file('selfie_file')->store('selfies', 'public');
         }
 
         JobApplication::create([
@@ -123,10 +177,11 @@ class WorkerController extends Controller
             'submitted_requirements' => $validated['submitted_requirements'],
             'cover_letter' => $validated['cover_letter'] ?? null,
             'attachment_path' => $attachmentPath,
+            'selfie_path' => $selfiePath,
         ]);
 
         return redirect()->route('worker.applications')
-            ->with('success', "Your application for '{$jobPost->title}' has been submitted successfully to {$jobPost->employer?->display_name}!");
+            ->with('success', "Your application for '{$jobPost->title}' has been submitted successfully with verified selfie and requirements to {$jobPost->employer?->display_name}!");
     }
 
     /**

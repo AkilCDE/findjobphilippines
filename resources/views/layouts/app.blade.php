@@ -121,15 +121,6 @@
                 <!-- Right Side Actions & Auth Controls -->
                 <div class="flex items-center space-x-3">
                     @auth
-                        @if(auth()->user()->isEmployer())
-                            <a href="{{ route('employer.posts.create') }}" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-md shadow-sky-500/20 transition-all">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                </svg>
-                                Post Job
-                            </a>
-                        @endif
-
                         <!-- User Profile Badge & Logout -->
                         <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
                             <div class="text-right hidden sm:block">

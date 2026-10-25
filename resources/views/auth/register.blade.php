@@ -7,12 +7,40 @@
         <!-- Header -->
         <div class="text-center mb-6">
             <h1 class="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
-                Create Account
+                {{ !empty($googleEmail) ? 'Complete Account Setup' : 'Create Account' }}
             </h1>
             <p class="text-xs font-semibold text-slate-600 mt-1">
-                Choose your account type to get started
+                {{ !empty($googleEmail) ? 'Set up your password, names, and details to finish your Google registration' : 'Choose your account type to get started' }}
             </p>
         </div>
+
+        <!-- Google Connected Banner (if continuing with Google) -->
+        @if(!empty($googleEmail))
+            <div class="mb-6 p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-start gap-3 shadow-xs">
+                <div class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                    </svg>
+                </div>
+                <div class="flex-1 text-xs">
+                    <p class="font-black text-slate-950">
+                        Continuing with Google: <span class="text-sky-700 font-bold underline">{{ $googleEmail }}</span>
+                    </p>
+                    <p class="font-semibold text-slate-600 mt-0.5">
+                        You must set up your password, names, and contact details below before accessing your account.
+                    </p>
+                </div>
+            </div>
+        @endif
+
+        @php
+            $googleNameParts = !empty($googleName) ? explode(' ', $googleName, 2) : ['', ''];
+            $prefillFirst = $googleNameParts[0] ?? '';
+            $prefillLast = $googleNameParts[1] ?? '';
+        @endphp
 
         <!-- Role Selector Switch (Worker vs Employer) -->
         <div class="mb-6 p-1 rounded-2xl bg-slate-100 border border-slate-200/80 flex items-center gap-1">
@@ -38,7 +66,7 @@
                         <label for="first_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
                             First Name <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="first_name" id="first_name" value="{{ old('first_name') }}"
+                        <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $prefillFirst) }}"
                             placeholder="Juan"
                             class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
                     </div>
@@ -46,7 +74,7 @@
                         <label for="last_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
                             Last Name <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="last_name" id="last_name" value="{{ old('last_name') }}"
+                        <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $prefillLast) }}"
                             placeholder="Dela Cruz"
                             class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
                     </div>
@@ -72,7 +100,7 @@
                     <label for="company_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
                         Company Name <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="company_name" id="company_name" value="{{ old('company_name') }}"
+                    <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $googleName ?? '') }}"
                         placeholder="Company or Business Name"
                         class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
                 </div>
@@ -83,7 +111,7 @@
                 <label for="reg_email" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
                     Email <span class="text-red-500">*</span>
                 </label>
-                <input type="email" name="email" id="reg_email" value="{{ old('email') }}" required
+                <input type="email" name="email" id="reg_email" value="{{ old('email', $googleEmail ?? '') }}" required
                     placeholder="email@example.com"
                     class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
             </div>
@@ -106,10 +134,11 @@
                     class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
             </div>
 
+            <!-- Set Up Password (Always Required) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="reg_password" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                        Password <span class="text-red-500">*</span>
+                        Set Password <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
                         <input type="password" name="password" id="reg_password" required minlength="8"
@@ -154,7 +183,7 @@
             <!-- Submit Button -->
             <button type="submit"
                 class="w-full py-3.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all mt-2">
-                Sign Up
+                {{ !empty($googleEmail) ? 'Complete Account Setup' : 'Sign Up' }}
             </button>
         </form>
 
@@ -169,7 +198,7 @@
         <form method="POST" action="{{ route('auth.google') }}" id="googleRegisterForm">
             @csrf
             <input type="hidden" name="flow" value="register">
-            <input type="hidden" name="google_role" id="googleRoleField" value="worker">
+            <input type="hidden" name="google_role" id="googleRoleField" value="{{ old('role', $defaultRole ?? 'worker') }}">
             <input type="hidden" name="google_email" id="googleRegisterEmail" value="">
             <input type="hidden" name="google_name" id="googleRegisterName" value="">
             <button type="button" onclick="openGoogleRegisterModal()"
@@ -197,39 +226,73 @@
     </div>
 </div>
 
-<!-- Clean Google Register Modal -->
-<div id="googleRegisterModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden">
-    <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4">
-        <div class="flex items-center gap-2.5">
-            <svg class="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-            </svg>
-            <h3 class="text-sm font-bold text-slate-900">Sign up with Google</h3>
-        </div>
-        <p class="text-xs text-slate-600">Enter your Google email and display name to create your account.</p>
-        <div>
-            <label for="modalRegisterEmail" class="block text-xs font-bold text-slate-700 mb-1">Google Email</label>
-            <input type="email" id="modalRegisterEmail" placeholder="your.name@gmail.com"
-                class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
-        </div>
-        <div>
-            <label for="modalRegisterName" class="block text-xs font-bold text-slate-700 mb-1">Full Name or Business Name</label>
-            <input type="text" id="modalRegisterName" placeholder="Juan Dela Cruz"
-                class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
-        </div>
-        <div class="flex items-center justify-end gap-2 pt-2">
-            <button type="button" onclick="closeGoogleRegisterModal()"
-                class="px-3.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">
-                Cancel
-            </button>
-            <button type="button" onclick="submitGoogleRegisterModal()"
-                class="px-4 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-sm transition-colors">
-                Complete Sign Up
+<!-- ==================== GOOGLE ACCOUNT CHOOSER MODAL ==================== -->
+<div id="googleRegisterModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs hidden transition-all">
+    <div class="w-full max-w-sm rounded-3xl bg-white p-6 sm:p-7 shadow-2xl border border-white/90 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+        
+        <!-- Google Header -->
+        <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+                <div>
+                    <h3 class="text-sm font-black text-slate-950">Choose an account</h3>
+                    <p class="text-[11px] text-slate-500 font-semibold">to continue to <strong class="text-slate-900">Findjobph</strong></p>
+                </div>
+            </div>
+            <button type="button" onclick="closeGoogleRegisterModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
+
+        <p class="text-[11px] font-semibold text-slate-600">
+            Select an existing account in your browser, or add another account:
+        </p>
+
+        <!-- Accounts List Stored in Browser -->
+        <div id="googleRegisterAccountsList" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <!-- Dynamically populated from browser localStorage -->
+        </div>
+
+        <!-- Add Another Account Button & Form -->
+        <div class="pt-2 border-t border-slate-100 space-y-2.5">
+            <button type="button" onclick="toggleAddGoogleRegisterAccountForm()" id="showAddRegisterAccountBtn"
+                class="w-full py-2 px-3 rounded-2xl hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-3 transition-colors text-left border border-dashed border-slate-200">
+                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm">
+                    +
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-900">Use another account</p>
+                    <p class="text-[10px] text-slate-500 font-semibold">Add account to this browser</p>
+                </div>
+            </button>
+
+            <!-- Inline Add Account Form -->
+            <div id="addRegisterAccountForm" class="hidden p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <p class="text-[10px] font-bold text-slate-700 uppercase">Add Google Account</p>
+                <input type="text" id="newRegisterAccountName" placeholder="Full Name (e.g. Alex Reyes)"
+                    class="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-semibold">
+                <input type="email" id="newRegisterAccountEmail" placeholder="Google Email (e.g. alex.reyes@gmail.com)"
+                    class="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-semibold">
+                <div class="flex items-center justify-end gap-2 pt-1">
+                    <button type="button" onclick="toggleAddGoogleRegisterAccountForm(false)" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-200/70">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="saveAndSelectNewGoogleRegisterAccount()" class="px-3.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-sm">
+                        Add & Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-[10px] text-slate-400 text-center leading-normal">
+            New accounts will automatically be directed to set up their password and names.
+        </p>
+
     </div>
 </div>
 
@@ -283,34 +346,119 @@
         }
     }
 
+    const DEFAULT_GOOGLE_ACCOUNTS = [
+        { name: 'Juan Dela Cruz', email: 'juandelacruz@gmail.com', avatarColor: 'bg-blue-600' },
+        { name: 'Maria Santos', email: 'mariasantos.ph@gmail.com', avatarColor: 'bg-emerald-600' }
+    ];
+
+    function getBrowserGoogleAccounts() {
+        try {
+            const stored = localStorage.getItem('findjobph_google_accounts');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch (e) {}
+        localStorage.setItem('findjobph_google_accounts', JSON.stringify(DEFAULT_GOOGLE_ACCOUNTS));
+        return DEFAULT_GOOGLE_ACCOUNTS;
+    }
+
+    function renderGoogleRegisterAccounts() {
+        const accounts = getBrowserGoogleAccounts();
+        const container = document.getElementById('googleRegisterAccountsList');
+        if (!container) return;
+
+        container.innerHTML = accounts.map((acc) => {
+            const initial = (acc.name || acc.email || 'G').charAt(0).toUpperCase();
+            const color = acc.avatarColor || 'bg-sky-600';
+            const safeEmail = acc.email.replace(/'/g, "\\'");
+            const safeName = (acc.name || '').replace(/'/g, "\\'");
+            return `
+                <div class="group flex items-center justify-between p-2.5 rounded-2xl hover:bg-sky-50/80 border border-slate-100 hover:border-sky-200 cursor-pointer transition-all"
+                     onclick="selectGoogleRegisterAccount('${safeEmail}', '${safeName}')">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-full ${color} text-white flex items-center justify-center font-black text-xs shadow-sm flex-shrink-0">
+                            ${initial}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-950 truncate">${acc.name}</p>
+                            <p class="text-[11px] text-slate-500 truncate font-semibold">${acc.email}</p>
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-bold text-sky-700 group-hover:text-sky-900 group-hover:translate-x-0.5 transition-all">
+                        &rarr;
+                    </span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openGoogleRegisterModal() {
+        renderGoogleRegisterAccounts();
+        document.getElementById('googleRegisterModal').classList.remove('hidden');
+    }
+
+    function closeGoogleRegisterModal() {
+        document.getElementById('googleRegisterModal').classList.add('hidden');
+        toggleAddGoogleRegisterAccountForm(false);
+    }
+
+    function toggleAddGoogleRegisterAccountForm(show) {
+        const form = document.getElementById('addRegisterAccountForm');
+        const btn = document.getElementById('showAddRegisterAccountBtn');
+        const willShow = typeof show === 'boolean' ? show : form.classList.contains('hidden');
+        if (willShow) {
+            form.classList.remove('hidden');
+            btn.classList.add('hidden');
+            document.getElementById('newRegisterAccountName').focus();
+        } else {
+            form.classList.add('hidden');
+            btn.classList.remove('hidden');
+        }
+    }
+
+    function selectGoogleRegisterAccount(email, name) {
+        const role = document.getElementById('roleInput').value || 'worker';
+        document.getElementById('googleRegisterEmail').value = email;
+        document.getElementById('googleRegisterName').value = name;
+        document.getElementById('googleRoleField').value = role;
+        document.getElementById('googleRegisterForm').submit();
+    }
+
+    function saveAndSelectNewGoogleRegisterAccount() {
+        const nameInput = document.getElementById('newRegisterAccountName');
+        const emailInput = document.getElementById('newRegisterAccountEmail');
+        const email = emailInput.value.trim();
+        const name = nameInput.value.trim() || email.split('@')[0];
+
+        if (!email || !email.includes('@')) {
+            alert('Please enter a valid Google email address.');
+            emailInput.focus();
+            return;
+        }
+
+        const accounts = getBrowserGoogleAccounts();
+        if (!accounts.some(a => a.email.toLowerCase() === email.toLowerCase())) {
+            accounts.push({
+                name: name,
+                email: email,
+                avatarColor: 'bg-purple-600'
+            });
+            localStorage.setItem('findjobph_google_accounts', JSON.stringify(accounts));
+        }
+
+        selectGoogleRegisterAccount(email, name);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const initialRole = document.getElementById('roleInput').value || 'worker';
         switchRole(initialRole);
     });
 
-    function openGoogleRegisterModal() {
-        document.getElementById('googleRegisterModal').classList.remove('hidden');
-        document.getElementById('modalRegisterEmail').focus();
-    }
-
-    function closeGoogleRegisterModal() {
-        document.getElementById('googleRegisterModal').classList.add('hidden');
-    }
-
-    function submitGoogleRegisterModal() {
-        const email = document.getElementById('modalRegisterEmail').value.trim();
-        const name = document.getElementById('modalRegisterName').value.trim();
-        const role = document.getElementById('roleInput').value || 'worker';
-
-        if (!email) {
-            alert('Please enter your Google email.');
-            return;
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeGoogleRegisterModal();
         }
-
-        document.getElementById('googleRegisterEmail').value = email;
-        document.getElementById('googleRegisterName').value = name || 'Google User';
-        document.getElementById('googleRoleField').value = role;
-        document.getElementById('googleRegisterForm').submit();
-    }
+    });
 </script>
 @endsection

@@ -204,9 +204,36 @@
                         </div>
 
                         <!-- Requirements Snippet -->
-                        <div class="p-3 bg-white/70 rounded-2xl border border-slate-200/60 text-xs text-slate-800">
-                            <span class="font-bold text-slate-950 block mb-1">Your Submitted Requirements:</span>
+                        <div class="p-4 bg-white/70 rounded-2xl border border-slate-200/60 text-xs text-slate-800 space-y-2">
+                            <span class="font-bold text-slate-950 block">Your Submitted Requirements:</span>
                             <p class="whitespace-pre-line leading-relaxed font-semibold text-slate-800">{{ $app->submitted_requirements }}</p>
+
+                            <!-- Document & Selfie Previews -->
+                            <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-4">
+                                @if($app->attachment_path)
+                                    <div class="flex items-center gap-2">
+                                        @if(preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $app->attachment_path))
+                                            <a href="{{ asset('storage/' . $app->attachment_path) }}" target="_blank" class="block w-10 h-10 rounded-lg overflow-hidden border border-slate-300 flex-shrink-0">
+                                                <img src="{{ asset('storage/' . $app->attachment_path) }}" alt="Requirement Photo" class="w-full h-full object-cover">
+                                            </a>
+                                        @endif
+                                        <a href="{{ asset('storage/' . $app->attachment_path) }}" target="_blank" class="text-[11px] font-bold text-sky-700 hover:text-sky-900 underline">
+                                            📄 View Requirement Photo
+                                        </a>
+                                    </div>
+                                @endif
+
+                                @if($app->selfie_path)
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ asset('storage/' . $app->selfie_path) }}" target="_blank" class="block w-10 h-10 rounded-lg overflow-hidden border-2 border-purple-400 flex-shrink-0">
+                                            <img src="{{ asset('storage/' . $app->selfie_path) }}" alt="Worker Selfie" class="w-full h-full object-cover">
+                                        </a>
+                                        <a href="{{ asset('storage/' . $app->selfie_path) }}" target="_blank" class="text-[11px] font-bold text-purple-700 hover:text-purple-900 underline">
+                                            📸 View Camera Selfie
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         @if($app->termination_reason)

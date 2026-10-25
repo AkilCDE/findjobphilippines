@@ -222,42 +222,161 @@
                             </div>
                         @else
                             <!-- Apply Form -->
-                            <h3 class="text-lg font-black text-slate-950 mb-4">
-                                Apply for this Job
-                            </h3>
+                            <!-- Apply Form with Requirement Photo & Camera Selfie -->
+                            <div class="border-b border-slate-100 pb-3 mb-4">
+                                <h3 class="text-lg font-black text-slate-950">
+                                    Apply for this Job
+                                </h3>
+                                <p class="text-xs font-semibold text-slate-600 mt-0.5">
+                                    Submit your verified credentials and clear live selfie photo
+                                </p>
+                            </div>
 
-                            <form method="POST" action="{{ route('worker.apply', $jobPost) }}" enctype="multipart/form-data" class="space-y-4">
+                            <form method="POST" action="{{ route('worker.apply', $jobPost) }}" enctype="multipart/form-data" id="jobApplicationForm" class="space-y-4">
                                 @csrf
 
+                                <!-- Requirements Checklist / Details -->
                                 <div>
                                     <label for="submitted_requirements" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                                        Requirements Checklist <span class="text-red-500">*</span>
+                                        Requirements Checklist & Statement <span class="text-red-500">*</span>
                                     </label>
-                                    <textarea id="submitted_requirements" name="submitted_requirements" rows="4" required
-                                        placeholder="List your qualifications, valid IDs, clearances, or certificates..."
-                                        class="w-full px-4 py-3 rounded-2xl glass-input text-sm font-semibold">{{ old('submitted_requirements') }}</textarea>
+                                    <textarea id="submitted_requirements" name="submitted_requirements" rows="3" required
+                                        placeholder="Confirm which required documents you are submitting (e.g. Valid Gov't ID, Barangay Clearance, NC II Certificate)..."
+                                        class="w-full px-4 py-3 rounded-2xl glass-input text-xs font-semibold">{{ old('submitted_requirements') }}</textarea>
                                 </div>
 
+                                <!-- 1. Clear Photo of Requirements / Documents (Mandatory) -->
+                                <div class="p-4 rounded-2xl bg-sky-50/70 border border-sky-200/80 space-y-2">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div>
+                                            <label for="requirements_photo" class="block text-xs font-bold uppercase tracking-wider text-slate-900">
+                                                1. Clear Photo of Requirements <span class="text-red-500">*</span>
+                                            </label>
+                                            <p class="text-[11px] font-semibold text-slate-600">
+                                                Upload a clear, legible photo or scan of your ID or required certificate.
+                                            </p>
+                                        </div>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-sky-200 text-sky-900">
+                                            Required
+                                        </span>
+                                    </div>
+
+                                    <input type="file" id="requirements_photo" name="requirements_photo" accept="image/jpeg,image/png,image/webp,application/pdf" required
+                                        onchange="previewRequirementPhoto(this)"
+                                        class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-semibold file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-sky-500 file:text-white hover:file:bg-sky-600 cursor-pointer">
+
+                                    <!-- Image Preview Box -->
+                                    <div id="requirementPreviewBox" class="hidden mt-2 p-2 rounded-xl bg-white border border-slate-200 flex items-center gap-3">
+                                        <img id="requirementPreviewImg" src="" alt="Requirement Preview" class="w-14 h-14 object-cover rounded-lg border border-slate-200">
+                                        <div class="flex-1 min-w-0 text-xs">
+                                            <p id="requirementFileName" class="font-bold text-slate-900 truncate">document.jpg</p>
+                                            <p class="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                                Photo ready for verification
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Live Selfie Using Camera (Mandatory) -->
+                                <div class="p-4 rounded-2xl bg-purple-50/70 border border-purple-200/80 space-y-3">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-900">
+                                                2. Worker Selfie (Camera Verification) <span class="text-red-500">*</span>
+                                            </label>
+                                            <p class="text-[11px] font-semibold text-slate-600">
+                                                Take a live selfie right now using your camera to confirm applicant identity.
+                                            </p>
+                                        </div>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-purple-200 text-purple-900">
+                                            Live Camera
+                                        </span>
+                                    </div>
+
+                                    <!-- Camera Interface Box -->
+                                    <div class="rounded-xl border border-purple-200/80 bg-white p-3 space-y-3 text-center">
+                                        
+                                        <!-- Initial State: Open Camera Button -->
+                                        <div id="cameraPrompt">
+                                            <button type="button" onclick="startSelfieCamera()"
+                                                class="w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.01]">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                <span>Open Camera & Take Selfie</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- Camera Streaming View (Hidden initially) -->
+                                        <div id="cameraStreamContainer" class="hidden space-y-2">
+                                            <div class="relative w-full max-w-xs mx-auto overflow-hidden rounded-xl bg-black border-2 border-purple-400 aspect-[4/3]">
+                                                <video id="selfieVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+                                                <div class="absolute inset-0 border-2 border-white/40 pointer-events-none rounded-xl m-2 border-dashed"></div>
+                                            </div>
+                                            <canvas id="selfieCanvas" class="hidden"></canvas>
+                                            
+                                            <div class="flex items-center justify-center gap-2 pt-1">
+                                                <button type="button" onclick="snapSelfie()"
+                                                    class="py-2 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm flex items-center gap-1.5 transition-all">
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/></svg>
+                                                    Capture Selfie
+                                                </button>
+                                                <button type="button" onclick="stopSelfieCamera()"
+                                                    class="py-2 px-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Captured Selfie Preview (Hidden initially) -->
+                                        <div id="selfiePreviewContainer" class="hidden space-y-2">
+                                            <div class="relative w-full max-w-xs mx-auto overflow-hidden rounded-xl border-2 border-emerald-500 aspect-[4/3] shadow-md">
+                                                <img id="selfiePreviewImg" src="" alt="Captured Selfie" class="w-full h-full object-cover">
+                                                <div class="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                                                    <span>✓ Captured</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center justify-center gap-2 pt-1">
+                                                <button type="button" onclick="retakeSelfie()"
+                                                    class="py-1.5 px-3.5 rounded-xl border border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-900 font-bold text-xs flex items-center gap-1 transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                                    Retake Selfie
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Fallback File Upload (If camera denied or unsupported) -->
+                                        <div class="pt-2 border-t border-slate-100 text-left">
+                                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Camera not working on your device?</p>
+                                            <input type="file" id="selfie_file" name="selfie_file" accept="image/*" capture="user"
+                                                onchange="handleSelfieFileFallback(this)"
+                                                class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-bold file:bg-purple-600 file:text-white">
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Hidden Input with Base64 Captured Selfie -->
+                                    <input type="hidden" name="selfie_data" id="selfieData" value="">
+                                    <p id="selfieErrorMsg" class="text-xs font-bold text-red-600 hidden">
+                                        * Please take a live selfie with your camera (or upload a selfie file) before submitting.
+                                    </p>
+                                </div>
+
+                                <!-- Optional Message -->
                                 <div>
                                     <label for="cover_letter" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
                                         Message to Employer (Optional)
                                     </label>
                                     <textarea id="cover_letter" name="cover_letter" rows="2"
-                                        placeholder="Add an optional message..."
-                                        class="w-full px-4 py-3 rounded-2xl glass-input text-sm font-semibold">{{ old('cover_letter') }}</textarea>
-                                </div>
-
-                                <div>
-                                    <label for="attachment" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                                        Attachment (Optional)
-                                    </label>
-                                    <input type="file" id="attachment" name="attachment"
-                                        class="w-full px-4 py-2 rounded-2xl glass-input text-xs font-semibold file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-500 file:text-white hover:file:bg-sky-600">
+                                        placeholder="Add an optional message or introduction..."
+                                        class="w-full px-4 py-2.5 rounded-2xl glass-input text-xs font-semibold">{{ old('cover_letter') }}</textarea>
                                 </div>
 
                                 <button type="submit"
-                                    class="w-full py-3.5 px-4 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all">
-                                    Submit Application
+                                    class="w-full py-3.5 px-4 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all hover:scale-[1.01]">
+                                    Submit Application with Verified Selfie
                                 </button>
                             </form>
                         @endif
@@ -407,7 +526,157 @@
 
 @push('scripts')
 <script>
+    let selfieStream = null;
+
+    function previewRequirementPhoto(input) {
+        const box = document.getElementById('requirementPreviewBox');
+        const img = document.getElementById('requirementPreviewImg');
+        const nameEl = document.getElementById('requirementFileName');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            nameEl.textContent = file.name;
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    box.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                img.classList.add('hidden');
+                box.classList.remove('hidden');
+            }
+        } else {
+            box.classList.add('hidden');
+        }
+    }
+
+    async function startSelfieCamera() {
+        const prompt = document.getElementById('cameraPrompt');
+        const streamContainer = document.getElementById('cameraStreamContainer');
+        const previewContainer = document.getElementById('selfiePreviewContainer');
+        const video = document.getElementById('selfieVideo');
+        const errorMsg = document.getElementById('selfieErrorMsg');
+
+        errorMsg.classList.add('hidden');
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Your browser does not support live camera access. Please use the file upload fallback below.');
+            document.getElementById('selfie_file').focus();
+            return;
+        }
+
+        try {
+            selfieStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                },
+                audio: false
+            });
+            video.srcObject = selfieStream;
+            prompt.classList.add('hidden');
+            previewContainer.classList.add('hidden');
+            streamContainer.classList.remove('hidden');
+        } catch (err) {
+            console.error('Camera access error:', err);
+            alert('Could not access camera (' + (err.message || 'Permission denied') + '). Please allow camera access or use the fallback selfie upload below.');
+            document.getElementById('selfie_file').focus();
+        }
+    }
+
+    function stopSelfieCamera() {
+        if (selfieStream) {
+            selfieStream.getTracks().forEach(track => track.stop());
+            selfieStream = null;
+        }
+        document.getElementById('cameraStreamContainer').classList.add('hidden');
+        document.getElementById('cameraPrompt').classList.remove('hidden');
+    }
+
+    function snapSelfie() {
+        const video = document.getElementById('selfieVideo');
+        const canvas = document.getElementById('selfieCanvas');
+        const hiddenInput = document.getElementById('selfieData');
+        const previewImg = document.getElementById('selfiePreviewImg');
+        const streamContainer = document.getElementById('cameraStreamContainer');
+        const previewContainer = document.getElementById('selfiePreviewContainer');
+        const errorMsg = document.getElementById('selfieErrorMsg');
+
+        if (!video.videoWidth || !video.videoHeight) {
+            alert('Camera is still initializing, please wait a second...');
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        hiddenInput.value = dataUrl;
+        previewImg.src = dataUrl;
+
+        // Stop video
+        if (selfieStream) {
+            selfieStream.getTracks().forEach(track => track.stop());
+            selfieStream = null;
+        }
+
+        streamContainer.classList.add('hidden');
+        previewContainer.classList.remove('hidden');
+        errorMsg.classList.add('hidden');
+    }
+
+    function retakeSelfie() {
+        document.getElementById('selfieData').value = '';
+        startSelfieCamera();
+    }
+
+    function handleSelfieFileFallback(input) {
+        const hiddenInput = document.getElementById('selfieData');
+        const previewImg = document.getElementById('selfiePreviewImg');
+        const previewContainer = document.getElementById('selfiePreviewContainer');
+        const prompt = document.getElementById('cameraPrompt');
+        const streamContainer = document.getElementById('cameraStreamContainer');
+        const errorMsg = document.getElementById('selfieErrorMsg');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                hiddenInput.value = e.target.result;
+                previewImg.src = e.target.result;
+                prompt.classList.add('hidden');
+                streamContainer.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+                errorMsg.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('jobApplicationForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const selfieData = document.getElementById('selfieData').value;
+                const selfieFileInput = document.getElementById('selfie_file');
+                const hasFile = selfieFileInput && selfieFileInput.files && selfieFileInput.files.length > 0;
+                const errorMsg = document.getElementById('selfieErrorMsg');
+
+                if (!selfieData && !hasFile) {
+                    e.preventDefault();
+                    errorMsg.classList.remove('hidden');
+                    errorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+            });
+        }
+
         const lat = {{ $jobPost->latitude ?? 12.8797 }};
         const lng = {{ $jobPost->longitude ?? 121.7740 }};
 

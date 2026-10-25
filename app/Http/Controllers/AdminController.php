@@ -35,6 +35,39 @@ class AdminController extends Controller
         $recentUsers = User::latest()->take(5)->get();
         $recentPosts = JobPost::with('employer')->latest()->take(5)->get();
 
+        // 1. Activity Trend: Last 7 days applications and hires
+        $trendDates = [];
+        $trendApplications = [];
+        $trendHires = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $dateStr = $date->format('M d');
+            $trendDates[] = $dateStr;
+            $trendApplications[] = JobApplication::whereDate('created_at', $date->toDateString())->count();
+            $trendHires[] = JobApplication::where('status', 'hired')
+                ->whereDate('hired_at', $date->toDateString())
+                ->count();
+        }
+
+        // 2. Job Posts by Category
+        $categoryData = JobPost::selectRaw('category, count(*) as count')
+            ->groupBy('category')
+            ->orderByDesc('count')
+            ->take(6)
+            ->pluck('count', 'category')
+            ->toArray();
+
+        // 3. Application Status Breakdown
+        $applicationStatusData = [
+            'Hired' => $totalHired,
+            'Pending' => JobApplication::where('status', 'pending')->count(),
+            'Leave Requested' => JobApplication::where('status', 'leave_requested')->count(),
+            'Resigned' => JobApplication::where('status', 'resigned')->count(),
+            'Fired' => JobApplication::where('status', 'fired')->count(),
+            'Rejected' => JobApplication::where('status', 'rejected')->count(),
+        ];
+
         return view('admin.dashboard', compact(
             'totalUsers',
             'workersCount',
@@ -48,7 +81,12 @@ class AdminController extends Controller
             'totalHired',
             'totalMessages',
             'recentUsers',
-            'recentPosts'
+            'recentPosts',
+            'trendDates',
+            'trendApplications',
+            'trendHires',
+            'categoryData',
+            'applicationStatusData'
         ));
     }
 

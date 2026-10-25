@@ -65,7 +65,10 @@ class AuthController extends Controller
             ? $request->query('role')
             : 'worker';
 
-        return view('auth.register', compact('defaultRole'));
+        $googleEmail = $request->query('google_email', session('google_email', ''));
+        $googleName = $request->query('google_name', session('google_name', ''));
+
+        return view('auth.register', compact('defaultRole', 'googleEmail', 'googleName'));
     }
 
     /**
@@ -206,15 +209,17 @@ class AuthController extends Controller
      */
     public function googleAuth(Request $request): RedirectResponse
     {
-        $email = $request->input('google_email');
+        $email = trim((string) $request->input('google_email'));
+        $name = trim((string) $request->input('google_name'));
         $role = $request->input('google_role', 'worker');
 
         if (! $email) {
-            return back()->with('error', 'Google authentication did not provide an email address.');
+            return back()->with('error', 'Please choose a Google account to continue.');
         }
 
         $user = User::where('email', $email)->first();
 
+        // If user already exists in the system, log them in and proceed
         if ($user) {
             Auth::login($user);
             $request->session()->regenerate();
@@ -223,37 +228,15 @@ class AuthController extends Controller
                 ->with('success', "Signed in with Google as {$user->display_name}!");
         }
 
-        // If signing in via Google and not yet registered
-        if ($request->input('flow') === 'login') {
-            return redirect()->route('register', ['role' => $role, 'google_email' => $email])
-                ->with('info', "No existing account found for {$email}. Please complete your profile to register with Google.");
-        }
-
-        // Auto-create user via Google signup
-        $name = $request->input('google_name', explode('@', $email)[0]);
-        $nameParts = explode(' ', $name);
-        $firstName = $nameParts[0] ?? 'Google';
-        $lastName = count($nameParts) > 1 ? implode(' ', array_slice($nameParts, 1)) : 'User';
-
-        $user = User::create([
-            'name' => $name,
-            'first_name' => $role === 'worker' ? $firstName : null,
-            'last_name' => $role === 'worker' ? $lastName : null,
-            'company_name' => $role === 'employer' ? $name : null,
-            'email' => $email,
+        // User does not have an account set up yet.
+        // Mandatory requirement: Automatically redirect to sign up to set up password and names.
+        // Do not redirect to the home page until account setup is completed!
+        return redirect()->route('register', [
             'role' => $role,
-            'sex' => $role === 'worker' ? 'Prefer not to say' : null,
-            'address' => $role === 'worker' ? 'Catigbian, Bohol, Philippines' : 'Taguig City, Metro Manila',
-            'contact_number' => '+63 912 345 6789',
-            'password' => Hash::make(Str::random(16)),
-            'email_verified_at' => now(),
-        ]);
-
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return $this->redirectBasedOnRole($user)
-            ->with('success', "Welcome to Findjobph, {$user->display_name}! Successfully connected with Google.");
+            'google_email' => $email,
+            'google_name' => $name,
+        ])->with('google_setup', true)
+            ->with('info', "Continuing with Google ({$email}). Please complete your account setup with your password and name details to get started.");
     }
 
     /**

@@ -147,7 +147,7 @@
                         @endif
 
                         <!-- Submitted Requirements & Notes -->
-                        <div class="p-4 rounded-2xl bg-white/70 border border-slate-200/60 space-y-2 text-xs">
+                        <div class="p-4 rounded-2xl bg-white/70 border border-slate-200/60 space-y-3 text-xs">
                             <div class="flex items-center justify-between">
                                 <span class="font-black text-slate-950 uppercase tracking-wider text-[10px]">
                                     Submitted Requirements & Credentials:
@@ -159,6 +159,74 @@
                             <p class="text-slate-800 font-semibold whitespace-pre-line leading-relaxed">
                                 {{ $app->submitted_requirements }}
                             </p>
+
+                            <!-- Verification Photos: Requirement Document & Live Camera Selfie -->
+                            <div class="pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <!-- 1. Requirement Document Photo -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-bold text-slate-900 flex items-center gap-1.5 text-[11px]">
+                                            📄 Clear Photo of Requirements
+                                        </span>
+                                        @if($app->attachment_path)
+                                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Uploaded</span>
+                                        @else
+                                            <span class="text-[10px] font-bold text-slate-500">None</span>
+                                        @endif
+                                    </div>
+                                    @if($app->attachment_path)
+                                        <div class="flex items-center gap-3">
+                                            @php
+                                                $isReqImage = preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $app->attachment_path);
+                                            @endphp
+                                            @if($isReqImage)
+                                                <a href="{{ asset('storage/' . $app->attachment_path) }}" target="_blank" class="block flex-shrink-0 group relative overflow-hidden rounded-lg border border-slate-300 w-16 h-16 bg-slate-200">
+                                                    <img src="{{ asset('storage/' . $app->attachment_path) }}" alt="Requirement Photo" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                                                </a>
+                                            @endif
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-slate-800 font-bold truncate">{{ basename($app->attachment_path) }}</p>
+                                                <a href="{{ asset('storage/' . $app->attachment_path) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-sky-700 hover:text-sky-900 mt-0.5">
+                                                    <span>View Full Document</span>
+                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <p class="text-slate-500 text-[11px] italic">No document file attached.</p>
+                                    @endif
+                                </div>
+
+                                <!-- 2. Camera Selfie Verification -->
+                                <div class="p-3 rounded-xl bg-purple-50/60 border border-purple-200/80 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-bold text-purple-950 flex items-center gap-1.5 text-[11px]">
+                                            📸 Live Camera Selfie
+                                        </span>
+                                        @if($app->selfie_path)
+                                            <span class="text-[10px] font-bold text-purple-800 bg-purple-200/80 px-1.5 py-0.5 rounded">Verified Selfie</span>
+                                        @else
+                                            <span class="text-[10px] font-bold text-slate-500">None</span>
+                                        @endif
+                                    </div>
+                                    @if($app->selfie_path)
+                                        <div class="flex items-center gap-3">
+                                            <a href="{{ asset('storage/' . $app->selfie_path) }}" target="_blank" class="block flex-shrink-0 group relative overflow-hidden rounded-lg border-2 border-purple-400 w-16 h-16 bg-slate-200">
+                                                <img src="{{ asset('storage/' . $app->selfie_path) }}" alt="Worker Selfie" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                                            </a>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-purple-950 font-bold text-xs">{{ $app->worker?->display_name }}'s Selfie</p>
+                                                <a href="{{ asset('storage/' . $app->selfie_path) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 hover:text-purple-900 mt-0.5">
+                                                    <span>View Full Selfie</span>
+                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <p class="text-slate-500 text-[11px] italic">No selfie captured.</p>
+                                    @endif
+                                </div>
+                            </div>
 
                             @if($app->cover_letter)
                                 <div class="pt-2 border-t border-slate-100">

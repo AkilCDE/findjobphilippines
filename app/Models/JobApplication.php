@@ -22,6 +22,7 @@ class JobApplication extends Model
         'cover_letter',
         'submitted_requirements',
         'attachment_path',
+        'selfie_path',
         'hired_at',
         'leave_reason',
         'leave_requested_at',

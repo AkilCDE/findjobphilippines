@@ -6,6 +6,8 @@ use App\Models\JobApplication;
 use App\Models\JobPost;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class JobPortalTest extends TestCase
@@ -100,10 +102,16 @@ class JobPortalTest extends TestCase
             'description' => 'Urgent commercial wiring.',
         ]);
 
+        Storage::fake('public');
+        $file = UploadedFile::fake()->image('tesda_card.jpg');
+        $base64Selfie = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
         // Worker applies
         $applyResponse = $this->actingAs($worker)->post("/jobs/{$post->id}/apply", [
             'submitted_requirements' => 'Submitted: TESDA NC II Electrical Installation Card, Barangay Clearance.',
             'cover_letter' => 'Available to start right away.',
+            'requirements_photo' => $file,
+            'selfie_data' => $base64Selfie,
         ]);
 
         $applyResponse->assertRedirect(route('worker.applications'));
@@ -371,5 +379,149 @@ class JobPortalTest extends TestCase
             'receiver_id' => $employer1->id,
             'job_post_id' => $job->id,
         ]);
+    }
+
+    public function test_employer_post_creation_requires_mandatory_requirements(): void
+    {
+        $employer = User::factory()->create(['role' => 'employer']);
+
+        // Attempt to create without requirements
+        $response = $this->actingAs($employer)->post('/employer/posts', [
+            'title' => 'Retail Cashier',
+            'category' => 'Retail & Sales',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱650 / day',
+            'workers_needed' => 1,
+            'location_address' => 'Makati City',
+            'latitude' => 14.5547,
+            'longitude' => 121.0244,
+            'description' => 'Supermarket cashier.',
+            // Missing requirements
+        ]);
+
+        $response->assertSessionHasErrors('requirements');
+
+        // Successful creation with mandatory requirements
+        $validResponse = $this->actingAs($employer)->post('/employer/posts', [
+            'title' => 'Retail Cashier',
+            'category' => 'Retail & Sales',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱650 / day',
+            'workers_needed' => 1,
+            'location_address' => 'Makati City',
+            'latitude' => 14.5547,
+            'longitude' => 121.0244,
+            'description' => 'Supermarket cashier.',
+            'requirements' => 'Barangay Clearance, Valid Government ID (UMID/Passport/PhilID)',
+        ]);
+
+        $validResponse->assertRedirect(route('employer.posts.index'));
+        $this->assertDatabaseHas('job_posts', [
+            'title' => 'Retail Cashier',
+            'requirements' => 'Barangay Clearance, Valid Government ID (UMID/Passport/PhilID)',
+        ]);
+    }
+
+    public function test_worker_application_mandates_requirement_photo_and_selfie(): void
+    {
+        Storage::fake('public');
+
+        $employer = User::factory()->create(['role' => 'employer']);
+        $worker = User::factory()->create(['role' => 'worker']);
+
+        $job = JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Delivery Rider',
+            'category' => 'Logistics & Delivery',
+            'job_type' => 'Full-time',
+            'workers_needed' => 2,
+            'workers_hired' => 0,
+            'status' => 'open',
+            'location_address' => 'Pasig City',
+            'latitude' => 14.5764,
+            'longitude' => 121.0851,
+            'requirements' => "Driver's License, NBI Clearance",
+            'description' => 'Motorcycle delivery within Metro Manila.',
+        ]);
+
+        // 1. Missing requirement photo and selfie
+        $failResponse = $this->actingAs($worker)->post("/jobs/{$job->id}/apply", [
+            'submitted_requirements' => "Driver's License attached",
+        ]);
+
+        $failResponse->assertSessionHasErrors(['requirements_photo', 'selfie_file']);
+
+        // 2. Complete submission with requirement photo file & live webcam base64 selfie
+        $file = UploadedFile::fake()->image('license.jpg');
+        // 1x1 transparent PNG base64
+        $base64Selfie = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+        $successResponse = $this->actingAs($worker)->post("/jobs/{$job->id}/apply", [
+            'submitted_requirements' => "Valid Professional Driver's License and Barangay Clearance",
+            'requirements_photo' => $file,
+            'selfie_data' => $base64Selfie,
+        ]);
+
+        $successResponse->assertRedirect(route('worker.applications'));
+        $this->assertDatabaseHas('job_applications', [
+            'job_post_id' => $job->id,
+            'worker_id' => $worker->id,
+        ]);
+
+        $application = JobApplication::where('job_post_id', $job->id)
+            ->where('worker_id', $worker->id)
+            ->first();
+
+        $this->assertNotNull($application->attachment_path);
+        $this->assertNotNull($application->selfie_path);
+    }
+
+    public function test_google_auth_redirects_unregistered_users_to_complete_account_setup(): void
+    {
+        // When Google account does not exist in DB
+        $response = $this->post('/auth/google', [
+            'google_email' => 'maria.google.test@gmail.com',
+            'google_name' => 'Maria Santos',
+            'google_role' => 'worker',
+        ]);
+
+        // Should NOT direct to home page. Must redirect to register to set up account!
+        $response->assertRedirect();
+        $response->assertSessionHas('google_setup', true);
+        $this->assertTrue(str_contains($response->headers->get('Location'), 'register'));
+        $this->assertGuest();
+
+        // Complete account setup on register
+        $registerResponse = $this->post('/register', [
+            'role' => 'worker',
+            'first_name' => 'Maria',
+            'last_name' => 'Santos',
+            'email' => 'maria.google.test@gmail.com',
+            'sex' => 'Female',
+            'address' => 'Cebu City, Philippines',
+            'contact_number' => '+63 917 123 4567',
+            'password' => 'secretPassword123!',
+            'password_confirmation' => 'secretPassword123!',
+        ]);
+
+        $registerResponse->assertRedirect(route('jobs.index'));
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', [
+            'email' => 'maria.google.test@gmail.com',
+            'name' => 'Maria Santos',
+        ]);
+
+        // Signing out
+        $this->post('/logout');
+        $this->assertGuest();
+
+        // Subsequent sign-in with Google immediately authenticates already set up user
+        $loginResponse = $this->post('/auth/google', [
+            'google_email' => 'maria.google.test@gmail.com',
+            'google_name' => 'Maria Santos',
+        ]);
+
+        $loginResponse->assertRedirect(route('jobs.index'));
+        $this->assertAuthenticated();
     }
 }
