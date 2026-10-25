@@ -14,6 +14,36 @@
             </p>
         </div>
 
+        <!-- Server-side Validation Error Banner -->
+        @if ($errors->any())
+            <div class="mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 shadow-sm animate-in fade-in duration-200">
+                <div class="flex items-center gap-2 font-black text-xs text-rose-700">
+                    <svg class="w-4 h-4 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <span>Please correct the following errors:</span>
+                </div>
+                <ul class="list-disc list-inside space-y-1 pl-1 text-[11px] font-semibold text-rose-700 mt-2">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <!-- Client-side Floating Trapping Alert -->
+        <div id="clientErrorBanner" class="hidden mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-900 shadow-sm animate-in fade-in duration-200">
+            <div class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 shrink-0 text-rose-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="flex-1 text-xs">
+                    <p class="font-black text-rose-900" id="clientErrorTitle">Action Required</p>
+                    <p class="font-semibold text-rose-700 mt-0.5" id="clientErrorMessage"></p>
+                </div>
+            </div>
+        </div>
+
         <!-- Google Connected Banner (if continuing with Google) -->
         @if(!empty($googleEmail))
             <div class="mb-6 p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-start gap-3 shadow-xs">
@@ -40,27 +70,35 @@
             $googleNameParts = !empty($googleName) ? explode(' ', $googleName, 2) : ['', ''];
             $prefillFirst = $googleNameParts[0] ?? '';
             $prefillLast = $googleNameParts[1] ?? '';
+
+            // Parse previous full address if validation returned
+            $oldAddress = old('address', '');
+            $oldParts = array_map('trim', explode(',', $oldAddress));
+            $oldBrgy = old('address_brgy', $oldParts[0] ?? '');
+            $oldCity = old('address_city', $oldParts[1] ?? '');
+            $oldProvince = old('address_province', $oldParts[2] ?? '');
+            $currentRole = old('role', $defaultRole ?? 'worker');
         @endphp
 
         <!-- Role Selector Switch (Worker vs Employer) -->
         <div class="mb-6 p-1 rounded-2xl bg-slate-100 border border-slate-200/80 flex items-center gap-1">
             <button type="button" id="roleBtnWorker" onclick="switchRole('worker')"
-                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-sm bg-white text-slate-950 border border-slate-200">
+                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 {{ $currentRole === 'worker' ? 'shadow-sm bg-white text-slate-950 border border-slate-200' : 'text-slate-600 hover:text-slate-950' }}">
                 Worker
             </button>
             <button type="button" id="roleBtnEmployer" onclick="switchRole('employer')"
-                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-950">
+                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 {{ $currentRole === 'employer' ? 'shadow-sm bg-white text-slate-950 border border-slate-200' : 'text-slate-600 hover:text-slate-950' }}">
                 Employer
             </button>
         </div>
 
         <!-- Registration Form -->
-        <form method="POST" action="{{ route('register') }}" id="registerForm" class="space-y-4">
+        <form method="POST" action="{{ route('register') }}" id="registerForm" class="space-y-4" onsubmit="return validateRegisterForm(event)">
             @csrf
-            <input type="hidden" name="role" id="roleInput" value="{{ old('role', $defaultRole ?? 'worker') }}">
+            <input type="hidden" name="role" id="roleInput" value="{{ $currentRole }}">
 
             <!-- WORKER SPECIFIC FIELDS -->
-            <div id="workerFields" class="space-y-4">
+            <div id="workerFields" class="space-y-4 {{ $currentRole === 'employer' ? 'hidden' : '' }}">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label for="first_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
@@ -68,7 +106,10 @@
                         </label>
                         <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $prefillFirst) }}"
                             placeholder="First Name"
-                            class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
+                            class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('first_name') border-rose-400 bg-rose-50/30 @enderror">
+                        @error('first_name')
+                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
                         <label for="last_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
@@ -76,74 +117,169 @@
                         </label>
                         <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $prefillLast) }}"
                             placeholder="Last Name"
-                            class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
+                            class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('last_name') border-rose-400 bg-rose-50/30 @enderror">
+                        @error('last_name')
+                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
-                <!-- Sex Selection -->
+                <!-- Worker Sex Selection -->
                 <div>
-                    <label for="sex" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                    <label for="worker_sex" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
                         Sex <span class="text-red-500">*</span>
                     </label>
-                    <select name="sex" id="sex" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
+                    <select name="sex" id="worker_sex" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('sex') border-rose-400 bg-rose-50/30 @enderror">
+                        <option value="">-- Select Sex --</option>
                         <option value="Male" {{ old('sex') == 'Male' ? 'selected' : '' }}>Male</option>
                         <option value="Female" {{ old('sex') == 'Female' ? 'selected' : '' }}>Female</option>
                         <option value="Other" {{ old('sex') == 'Other' ? 'selected' : '' }}>Other</option>
                         <option value="Prefer not to say" {{ old('sex') == 'Prefer not to say' ? 'selected' : '' }}>Prefer not to say</option>
                     </select>
+                    @error('sex')
+                        <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
             <!-- EMPLOYER SPECIFIC FIELDS -->
-            <div id="employerFields" class="space-y-4 hidden">
-                <div>
-                    <label for="company_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                        Company Name <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $googleName ?? '') }}"
-                        placeholder="Company or Business Name"
-                        class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
+            <div id="employerFields" class="space-y-4 {{ $currentRole === 'employer' ? '' : 'hidden' }}">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="company_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                            Company / Employer Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $googleName ?? '') }}"
+                            placeholder="Company or Business Name"
+                            class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('company_name') border-rose-400 bg-rose-50/30 @enderror">
+                        @error('company_name')
+                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Employer Sex Selection (Added for Employer as requested) -->
+                    <div>
+                        <label for="employer_sex" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                            Employer Sex <span class="text-red-500">*</span>
+                        </label>
+                        <select name="employer_sex" id="employer_sex" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('sex') border-rose-400 bg-rose-50/30 @enderror">
+                            <option value="">-- Select Sex --</option>
+                            <option value="Male" {{ old('sex') == 'Male' ? 'selected' : '' }}>Male</option>
+                            <option value="Female" {{ old('sex') == 'Female' ? 'selected' : '' }}>Female</option>
+                            <option value="Other" {{ old('sex') == 'Other' ? 'selected' : '' }}>Other</option>
+                            <option value="Prefer not to say" {{ old('sex') == 'Prefer not to say' ? 'selected' : '' }}>Prefer not to say</option>
+                        </select>
+                        @error('sex')
+                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
-            <!-- COMMON FIELDS -->
+            <!-- COMMON FIELDS (Required for Both) -->
+            <!-- Email Field (Unique Trapping) -->
             <div>
-                <label for="reg_email" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                    Email <span class="text-red-500">*</span>
-                </label>
+                <div class="flex items-center justify-between mb-1">
+                    <label for="reg_email" class="block text-xs font-bold uppercase tracking-wider text-slate-900">
+                        Email Address <span class="text-red-500">*</span>
+                    </label>
+                    <span class="text-[10px] font-bold text-slate-400">Must be unique</span>
+                </div>
                 <input type="email" name="email" id="reg_email" value="{{ old('email', $googleEmail ?? '') }}" required
                     placeholder="email@example.com"
-                    class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
+                    class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('email') border-rose-400 bg-rose-50/30 @enderror">
+                @error('email')
+                    <div class="mt-1.5 flex items-center gap-1.5 text-xs text-rose-600 font-bold">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>{{ $message }}</span>
+                    </div>
+                @enderror
             </div>
 
+            <!-- Mobile Number (11-Digit PH Trapping) -->
             <div>
-                <label for="contact_number" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                    Contact Number <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="contact_number" id="contact_number" value="{{ old('contact_number') }}" required
-                    placeholder="+63 912 345 6789"
-                    class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
+                <div class="flex items-center justify-between mb-1">
+                    <label for="contact_number" class="block text-xs font-bold uppercase tracking-wider text-slate-900">
+                        Mobile Number (11 Digits PH) <span class="text-red-500">*</span>
+                    </label>
+                    <span id="contactStatusBadge" class="text-[11px] font-extrabold text-slate-400">
+                        Format: 09XXXXXXXXX
+                    </span>
+                </div>
+                <div class="relative">
+                    <input type="tel" name="contact_number" id="contact_number" value="{{ old('contact_number') }}" required
+                        maxlength="11" placeholder="09123456789"
+                        class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('contact_number') border-rose-400 bg-rose-50/30 @enderror">
+                    <div id="contactValidBadge" class="hidden absolute right-3 top-2.5 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
+                        ✓ Valid 11 Digits
+                    </div>
+                </div>
+                @error('contact_number')
+                    <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
-            <div>
-                <label for="address" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                    Address <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="address" id="address" value="{{ old('address') }}" required
-                    placeholder="Barangay, City/Municipality, Province"
-                    class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold">
+            <!-- Full Address Format: Barangay, Municipality/City, Province -->
+            <div class="space-y-2 pt-1">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-900">
+                        Full Address Format <span class="text-red-500">*</span>
+                    </label>
+                    <span class="text-[10px] font-bold text-slate-500">Brgy, Municipality/City, Province</span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                        <label for="address_brgy" class="block text-[11px] font-bold text-slate-700 mb-1">
+                            Barangay <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="address_brgy" id="address_brgy" value="{{ $oldBrgy }}" required
+                            placeholder="e.g. Brgy. Poblacion"
+                            class="w-full px-3 py-2 rounded-xl glass-input text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label for="address_city" class="block text-[11px] font-bold text-slate-700 mb-1">
+                            Municipality / City <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="address_city" id="address_city" value="{{ $oldCity }}" required
+                            placeholder="e.g. Catigbian"
+                            class="w-full px-3 py-2 rounded-xl glass-input text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label for="address_province" class="block text-[11px] font-bold text-slate-700 mb-1">
+                            Province <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="address_province" id="address_province" value="{{ $oldProvince }}" required
+                            placeholder="e.g. Bohol"
+                            class="w-full px-3 py-2 rounded-xl glass-input text-xs font-semibold">
+                    </div>
+                </div>
+
+                <!-- Hidden Synchronized Address Field -->
+                <input type="hidden" name="address" id="full_address" value="{{ old('address') }}">
+
+                <!-- Live Address Format Preview -->
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px]">
+                    <span class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">📍 Full Address Preview:</span>
+                    <span id="addressPreviewText" class="font-bold text-slate-800 ml-1">
+                        {{ old('address') ? old('address') : 'Please fill in Barangay, Municipality/City, and Province' }}
+                    </span>
+                </div>
+                @error('address')
+                    <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
-            <!-- Set Up Password (Always Required) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Set Up Password (Strong Password Trapping) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div>
                     <label for="reg_password" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                        Set Password <span class="text-red-500">*</span>
+                        Strong Password <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
                         <input type="password" name="password" id="reg_password" required minlength="8"
                             placeholder="Min 8 characters"
-                            class="w-full pl-4 pr-11 py-2.5 rounded-xl glass-input text-sm font-semibold">
+                            class="w-full pl-4 pr-11 py-2.5 rounded-xl glass-input text-sm font-semibold @error('password') border-rose-400 bg-rose-50/30 @enderror">
                         <button type="button" onclick="togglePasswordVisibility('reg_password', this)"
                             class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-sky-600 focus:outline-none cursor-pointer transition-colors z-10"
                             title="Show/Hide password">
@@ -156,7 +292,11 @@
                             </svg>
                         </button>
                     </div>
+                    @error('password')
+                        <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
+
                 <div>
                     <label for="password_confirmation" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
                         Confirm Password <span class="text-red-500">*</span>
@@ -177,12 +317,46 @@
                             </svg>
                         </button>
                     </div>
+                    <div id="passwordMatchStatus" class="text-[11px] font-bold mt-1.5 hidden"></div>
+                </div>
+            </div>
+
+            <!-- Real-time Password Strength Meter & Interactive Checklist -->
+            <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-black uppercase tracking-wider text-slate-700">Password Strength:</span>
+                    <span id="strengthLabel" class="text-[11px] font-black text-slate-400">Not Entered</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                    <div id="strengthBar" class="h-full w-0 transition-all duration-300 rounded-full bg-rose-500"></div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
+                    <div id="ruleLength" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                        <span>8+ Characters</span>
+                    </div>
+                    <div id="ruleUpper" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                        <span>Uppercase (A-Z)</span>
+                    </div>
+                    <div id="ruleLower" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                        <span>Lowercase (a-z)</span>
+                    </div>
+                    <div id="ruleNumber" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                        <span>Number (0-9)</span>
+                    </div>
+                    <div id="ruleSpecial" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors sm:col-span-2">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                        <span>Special Character (!@#$%^&*)</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Submit Button -->
-            <button type="submit"
-                class="w-full py-3.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all mt-2">
+            <button type="submit" id="submitSignupBtn"
+                class="w-full py-3.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all mt-3">
                 {{ !empty($googleEmail) ? 'Complete Account Setup' : 'Sign Up' }}
             </button>
         </form>
@@ -198,7 +372,7 @@
         <form method="POST" action="{{ route('auth.google') }}" id="googleAuthForm" class="hidden">
             @csrf
             <input type="hidden" name="flow" value="register">
-            <input type="hidden" name="google_role" id="googleRoleField" value="{{ old('role', $defaultRole ?? 'worker') }}">
+            <input type="hidden" name="google_role" id="googleRoleField" value="{{ $currentRole }}">
             <input type="hidden" name="credential" id="googleCredentialInput" value="">
             <input type="hidden" name="google_email" id="googleEmailInput" value="">
             <input type="hidden" name="google_name" id="googleNameInput" value="">
@@ -270,7 +444,7 @@
                 </div>
                 <div>
                     <p class="text-xs font-bold text-slate-900">Use another account</p>
-                    <p class="text-[10px] text-slate-500 font-semibold">Sign up with any Google email</p>
+                    <p class="text-[10px] text-slate-500 font-semibold">Sign in with any Google email</p>
                 </div>
             </button>
 
@@ -291,13 +465,16 @@
         </div>
 
         <p class="text-[10px] text-slate-400 text-center leading-normal">
-            New accounts will automatically be directed to complete their password and personal details.
+            Your Google profile and email will automatically connect with Findjobph.
         </p>
 
     </div>
 </div>
 
 <script>
+    /**
+     * Switch role between Worker and Employer
+     */
     function switchRole(role) {
         const roleInput = document.getElementById('roleInput');
         const googleRoleField = document.getElementById('googleRoleField');
@@ -305,6 +482,8 @@
         const employerFields = document.getElementById('employerFields');
         const roleBtnWorker = document.getElementById('roleBtnWorker');
         const roleBtnEmployer = document.getElementById('roleBtnEmployer');
+        const workerSex = document.getElementById('worker_sex');
+        const employerSex = document.getElementById('employer_sex');
 
         roleInput.value = role;
         if (googleRoleField) googleRoleField.value = role;
@@ -319,6 +498,15 @@
             document.getElementById('company_name').required = true;
             document.getElementById('first_name').required = false;
             document.getElementById('last_name').required = false;
+
+            if (employerSex) {
+                employerSex.disabled = false;
+                employerSex.required = true;
+            }
+            if (workerSex) {
+                workerSex.disabled = true;
+                workerSex.required = false;
+            }
         } else {
             employerFields.classList.add('hidden');
             workerFields.classList.remove('hidden');
@@ -329,7 +517,318 @@
             document.getElementById('company_name').required = false;
             document.getElementById('first_name').required = true;
             document.getElementById('last_name').required = true;
+
+            if (workerSex) {
+                workerSex.disabled = false;
+                workerSex.required = true;
+            }
+            if (employerSex) {
+                employerSex.disabled = true;
+                employerSex.required = false;
+            }
         }
+    }
+
+    /**
+     * Mobile Number formatting and 11-digit PH validation
+     */
+    const contactInput = document.getElementById('contact_number');
+    const contactStatusBadge = document.getElementById('contactStatusBadge');
+    const contactValidBadge = document.getElementById('contactValidBadge');
+
+    contactInput.addEventListener('input', function(e) {
+        // Enforce digits only, max 11 digits
+        let val = e.target.value.replace(/\D/g, '').slice(0, 11);
+        e.target.value = val;
+
+        if (val.length === 11 && val.startsWith('09')) {
+            contactValidBadge.classList.remove('hidden');
+            contactStatusBadge.textContent = '✓ 11-Digit PH Mobile';
+            contactStatusBadge.className = 'text-[11px] font-extrabold text-emerald-600';
+        } else if (val.length > 0 && !val.startsWith('09')) {
+            contactValidBadge.classList.add('hidden');
+            contactStatusBadge.textContent = 'Must start with 09';
+            contactStatusBadge.className = 'text-[11px] font-extrabold text-rose-600';
+        } else if (val.length > 0) {
+            contactValidBadge.classList.add('hidden');
+            contactStatusBadge.textContent = `${val.length}/11 digits (starts with 09)`;
+            contactStatusBadge.className = 'text-[11px] font-extrabold text-amber-600';
+        } else {
+            contactValidBadge.classList.add('hidden');
+            contactStatusBadge.textContent = 'Format: 09XXXXXXXXX';
+            contactStatusBadge.className = 'text-[11px] font-extrabold text-slate-400';
+        }
+    });
+
+    /**
+     * Address synchronization and preview
+     */
+    const brgyInput = document.getElementById('address_brgy');
+    const cityInput = document.getElementById('address_city');
+    const provInput = document.getElementById('address_province');
+    const fullAddressInput = document.getElementById('full_address');
+    const addressPreviewText = document.getElementById('addressPreviewText');
+
+    function syncAddress() {
+        const brgy = brgyInput.value.trim();
+        const city = cityInput.value.trim();
+        const prov = provInput.value.trim();
+
+        if (brgy && city && prov) {
+            const formatted = `${brgy}, ${city}, ${prov}`;
+            fullAddressInput.value = formatted;
+            addressPreviewText.textContent = formatted;
+            addressPreviewText.className = 'font-black text-sky-800 ml-1';
+        } else {
+            fullAddressInput.value = '';
+            addressPreviewText.textContent = 'Please fill in Barangay, Municipality/City, and Province';
+            addressPreviewText.className = 'font-bold text-slate-500 ml-1';
+        }
+    }
+
+    brgyInput.addEventListener('input', syncAddress);
+    cityInput.addEventListener('input', syncAddress);
+    provInput.addEventListener('input', syncAddress);
+
+    /**
+     * Real-time Password Strength Check
+     */
+    const passwordInput = document.getElementById('reg_password');
+    const confirmPasswordInput = document.getElementById('password_confirmation');
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthLabel = document.getElementById('strengthLabel');
+    const passwordMatchStatus = document.getElementById('passwordMatchStatus');
+
+    function updateRuleUI(elemId, passed) {
+        const elem = document.getElementById(elemId);
+        const icon = elem.querySelector('.rule-icon');
+        if (passed) {
+            elem.className = 'flex items-center gap-1.5 text-emerald-700 font-bold transition-colors';
+            icon.textContent = '✓';
+            icon.className = 'rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black';
+        } else {
+            elem.className = 'flex items-center gap-1.5 text-slate-400 font-semibold transition-colors';
+            icon.textContent = '○';
+            icon.className = 'rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 text-[10px]';
+        }
+    }
+
+    function checkPasswordStrength(pwd) {
+        const hasLength = pwd.length >= 8;
+        const hasUpper = /[A-Z]/.test(pwd);
+        const hasLower = /[a-z]/.test(pwd);
+        const hasNumber = /[0-9]/.test(pwd);
+        const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
+
+        updateRuleUI('ruleLength', hasLength);
+        updateRuleUI('ruleUpper', hasUpper);
+        updateRuleUI('ruleLower', hasLower);
+        updateRuleUI('ruleNumber', hasNumber);
+        updateRuleUI('ruleSpecial', hasSpecial);
+
+        let score = 0;
+        if (hasLength) score++;
+        if (hasUpper) score++;
+        if (hasLower) score++;
+        if (hasNumber) score++;
+        if (hasSpecial) score++;
+
+        if (pwd.length === 0) {
+            strengthBar.style.width = '0%';
+            strengthBar.className = 'h-full transition-all duration-300 rounded-full bg-slate-300';
+            strengthLabel.textContent = 'Not Entered';
+            strengthLabel.className = 'text-[11px] font-black text-slate-400';
+            return 0;
+        }
+
+        if (score <= 2) {
+            strengthBar.style.width = '30%';
+            strengthBar.className = 'h-full transition-all duration-300 rounded-full bg-rose-500';
+            strengthLabel.textContent = 'Weak';
+            strengthLabel.className = 'text-[11px] font-black text-rose-600';
+        } else if (score === 3 || score === 4) {
+            strengthBar.style.width = score === 3 ? '60%' : '80%';
+            strengthBar.className = 'h-full transition-all duration-300 rounded-full bg-amber-500';
+            strengthLabel.textContent = score === 3 ? 'Fair' : 'Good';
+            strengthLabel.className = 'text-[11px] font-black text-amber-600';
+        } else if (score === 5) {
+            strengthBar.style.width = '100%';
+            strengthBar.className = 'h-full transition-all duration-300 rounded-full bg-emerald-500';
+            strengthLabel.textContent = 'Strong ✓';
+            strengthLabel.className = 'text-[11px] font-black text-emerald-600';
+        }
+
+        return score;
+    }
+
+    function checkPasswordMatch() {
+        const pwd = passwordInput.value;
+        const confirm = confirmPasswordInput.value;
+
+        if (!confirm) {
+            passwordMatchStatus.classList.add('hidden');
+            return true;
+        }
+
+        passwordMatchStatus.classList.remove('hidden');
+        if (pwd === confirm) {
+            passwordMatchStatus.textContent = '✓ Passwords match';
+            passwordMatchStatus.className = 'text-[11px] font-black text-emerald-600 mt-1.5';
+            return true;
+        } else {
+            passwordMatchStatus.textContent = '✗ Passwords do not match';
+            passwordMatchStatus.className = 'text-[11px] font-black text-rose-600 mt-1.5';
+            return false;
+        }
+    }
+
+    passwordInput.addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+        checkPasswordMatch();
+    });
+
+    confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+
+    /**
+     * Show Client Error Banner
+     */
+    function showClientError(title, message, focusElem) {
+        const banner = document.getElementById('clientErrorBanner');
+        const titleElem = document.getElementById('clientErrorTitle');
+        const msgElem = document.getElementById('clientErrorMessage');
+
+        titleElem.textContent = title;
+        msgElem.textContent = message;
+        banner.classList.remove('hidden');
+
+        if (focusElem) {
+            focusElem.focus();
+            focusElem.classList.add('border-rose-500', 'ring-2', 'ring-rose-200');
+            setTimeout(() => {
+                focusElem.classList.remove('ring-2', 'ring-rose-200');
+            }, 3000);
+            banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    /**
+     * Form Validation Trappings (Before Submit)
+     */
+    function validateRegisterForm(e) {
+        const role = document.getElementById('roleInput').value || 'worker';
+        const clientBanner = document.getElementById('clientErrorBanner');
+        clientBanner.classList.add('hidden');
+
+        // 1. Worker Trapping
+        if (role === 'worker') {
+            const firstName = document.getElementById('first_name').value.trim();
+            const lastName = document.getElementById('last_name').value.trim();
+            const sex = document.getElementById('worker_sex').value;
+
+            if (!firstName) {
+                e.preventDefault();
+                showClientError('First Name Required', 'Please fill in your first name.', document.getElementById('first_name'));
+                return false;
+            }
+            if (!lastName) {
+                e.preventDefault();
+                showClientError('Last Name Required', 'Please fill in your last name.', document.getElementById('last_name'));
+                return false;
+            }
+            if (!sex) {
+                e.preventDefault();
+                showClientError('Sex Required', 'Please select your sex from the dropdown.', document.getElementById('worker_sex'));
+                return false;
+            }
+        }
+
+        // 2. Employer Trapping
+        if (role === 'employer') {
+            const companyName = document.getElementById('company_name').value.trim();
+            const employerSex = document.getElementById('employer_sex').value;
+
+            if (!companyName) {
+                e.preventDefault();
+                showClientError('Company Name Required', 'Please fill in your company or business name.', document.getElementById('company_name'));
+                return false;
+            }
+            if (!employerSex) {
+                e.preventDefault();
+                showClientError('Employer Sex Required', 'Please select employer sex from the dropdown.', document.getElementById('employer_sex'));
+                return false;
+            }
+        }
+
+        // 3. Email Trapping
+        const email = document.getElementById('reg_email').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) {
+            e.preventDefault();
+            showClientError('Email Required', 'Please fill in your email address.', document.getElementById('reg_email'));
+            return false;
+        }
+        if (!emailRegex.test(email)) {
+            e.preventDefault();
+            showClientError('Invalid Email', 'Please enter a valid email address (e.g., name@example.com).', document.getElementById('reg_email'));
+            return false;
+        }
+
+        // 4. Mobile Number Trapping (11 Digits PH)
+        const contact = document.getElementById('contact_number').value.trim();
+        if (!contact) {
+            e.preventDefault();
+            showClientError('Mobile Number Required', 'Please enter your 11-digit Philippine mobile number.', document.getElementById('contact_number'));
+            return false;
+        }
+        if (contact.length !== 11 || !contact.startsWith('09')) {
+            e.preventDefault();
+            showClientError('Invalid Mobile Number', 'The mobile number must be an 11-digit Philippine number starting with 09 (e.g. 09123456789).', document.getElementById('contact_number'));
+            return false;
+        }
+
+        // 5. Full Address Trapping (Barangay, Municipality/City, Province)
+        const brgy = brgyInput.value.trim();
+        const city = cityInput.value.trim();
+        const prov = provInput.value.trim();
+
+        if (!brgy) {
+            e.preventDefault();
+            showClientError('Barangay Required', 'Please provide your Barangay in the address fields.', brgyInput);
+            return false;
+        }
+        if (!city) {
+            e.preventDefault();
+            showClientError('Municipality/City Required', 'Please provide your Municipality or City.', cityInput);
+            return false;
+        }
+        if (!prov) {
+            e.preventDefault();
+            showClientError('Province Required', 'Please provide your Province.', provInput);
+            return false;
+        }
+        syncAddress();
+
+        // 6. Strong Password Trapping
+        const pwd = passwordInput.value;
+        const score = checkPasswordStrength(pwd);
+        if (score < 5) {
+            e.preventDefault();
+            showClientError(
+                'Strong Password Required',
+                'Your password must contain at least 8 characters, an uppercase letter (A-Z), a lowercase letter (a-z), a number (0-9), and a special character (!@#$%^&*).',
+                passwordInput
+            );
+            return false;
+        }
+
+        // 7. Password Match Trapping
+        if (!checkPasswordMatch()) {
+            e.preventDefault();
+            showClientError('Password Mismatch', 'Your confirm password does not match the chosen password.', confirmPasswordInput);
+            return false;
+        }
+
+        return true;
     }
 
     function togglePasswordVisibility(inputId, btn) {
@@ -347,6 +846,9 @@
         }
     }
 
+    /**
+     * Real Google accounts modal logic
+     */
     function getDeviceGoogleAccounts() {
         const defaultAccounts = [
             { name: 'Johnley De Castro', email: 'javabrocode@gmail.com', role: 'Employer', color: 'bg-indigo-600' },
@@ -454,6 +956,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         const initialRole = document.getElementById('roleInput').value || 'worker';
         switchRole(initialRole);
+        syncAddress();
+        if (contactInput.value) {
+            contactInput.dispatchEvent(new Event('input'));
+        }
     });
 
     document.addEventListener('keydown', function(e) {

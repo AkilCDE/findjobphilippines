@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -78,19 +79,78 @@ class AuthController extends Controller
     {
         $role = $request->input('role', 'worker');
 
+        // Normalize Philippine mobile number: convert +639 or dashes/spaces into canonical 09XXXXXXXXX
+        $rawContact = (string) $request->input('contact_number', '');
+        $cleanedContact = preg_replace('/[^0-9]/', '', $rawContact);
+        if (str_starts_with($cleanedContact, '639') && strlen($cleanedContact) === 12) {
+            $cleanedContact = '0'.substr($cleanedContact, 2);
+        }
+        if (! empty($cleanedContact)) {
+            $request->merge(['contact_number' => $cleanedContact]);
+        }
+
+        // Combine full address components (Barangay, Municipality/City, Province) if provided separately
+        if ($request->filled('address_brgy') && $request->filled('address_city') && $request->filled('address_province')) {
+            $request->merge([
+                'address' => trim($request->input('address_brgy')).', '.trim($request->input('address_city')).', '.trim($request->input('address_province')),
+            ]);
+        }
+
+        // Support sex from either employer_sex or worker_sex dropdowns
+        if (! $request->filled('sex')) {
+            $fallbackSex = $request->input('employer_sex', $request->input('worker_sex'));
+            if ($fallbackSex) {
+                $request->merge(['sex' => $fallbackSex]);
+            }
+        }
+
+        // Custom validation error messages for signup trappings
+        $messages = [
+            'company_name.required' => 'The company or employer name is required.',
+            'first_name.required' => 'The first name is required.',
+            'last_name.required' => 'The last name is required.',
+            'sex.required' => 'Please select your sex.',
+            'sex.in' => 'Please select a valid option for sex.',
+            'email.required' => 'The email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email address is already registered. Please sign in or use a different email.',
+            'contact_number.required' => 'The mobile number is required.',
+            'contact_number.regex' => 'The mobile number must be an 11-digit Philippine mobile number starting with 09 (e.g., 09123456789).',
+            'address.required' => 'The address is required.',
+            'password.required' => 'The password is required.',
+            'password.confirmed' => 'The password confirmation does not match.',
+        ];
+
+        // Address validation: Full format required (Barangay, Municipality/City, Province)
+        $addressRule = function (string $attribute, mixed $value, \Closure $fail) {
+            $parts = array_filter(array_map('trim', explode(',', (string) $value)));
+            if (count($parts) < 3) {
+                $fail('The address must be complete and follow the format: Barangay, Municipality/City, Province (e.g. Brgy. Poblacion, Catigbian, Bohol).');
+            }
+        };
+
+        // Strong password rule: min 8 characters, letters, mixed case (upper + lower), numbers, and symbols
+        $passwordRule = Password::min(8)
+            ->letters()
+            ->mixedCase()
+            ->numbers()
+            ->symbols();
+
         if ($role === 'employer') {
             $validated = $request->validate([
                 'role' => ['required', 'in:employer'],
                 'company_name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-                'contact_number' => ['required', 'string', 'max:50'],
-                'address' => ['required', 'string', 'max:500'],
-                'password' => ['required', 'string', 'min:8', 'confirmed'],
-            ]);
+                'sex' => ['required', 'string', 'in:Male,Female,Other,Prefer not to say'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+                'contact_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
+                'address' => ['required', 'string', 'max:500', $addressRule],
+                'password' => ['required', 'string', $passwordRule, 'confirmed'],
+            ], $messages);
 
             $user = User::create([
                 'name' => $validated['company_name'],
                 'company_name' => $validated['company_name'],
+                'sex' => $validated['sex'],
                 'email' => $validated['email'],
                 'contact_number' => $validated['contact_number'],
                 'address' => $validated['address'],
@@ -102,21 +162,21 @@ class AuthController extends Controller
                 'role' => ['required', 'in:worker'],
                 'first_name' => ['required', 'string', 'max:100'],
                 'last_name' => ['required', 'string', 'max:100'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
                 'sex' => ['required', 'string', 'in:Male,Female,Other,Prefer not to say'],
-                'address' => ['required', 'string', 'max:500'],
-                'contact_number' => ['required', 'string', 'max:50'],
-                'password' => ['required', 'string', 'min:8', 'confirmed'],
-            ]);
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+                'contact_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
+                'address' => ['required', 'string', 'max:500', $addressRule],
+                'password' => ['required', 'string', $passwordRule, 'confirmed'],
+            ], $messages);
 
             $user = User::create([
                 'name' => "{$validated['first_name']} {$validated['last_name']}",
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
-                'email' => $validated['email'],
                 'sex' => $validated['sex'],
-                'address' => $validated['address'],
+                'email' => $validated['email'],
                 'contact_number' => $validated['contact_number'],
+                'address' => $validated['address'],
                 'role' => 'worker',
                 'password' => Hash::make($validated['password']),
             ]);

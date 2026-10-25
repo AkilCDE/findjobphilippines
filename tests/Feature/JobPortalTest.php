@@ -35,8 +35,8 @@ class JobPortalTest extends TestCase
             'email' => 'juan.worker@example.com',
             'address' => 'Ambuan, Catigbian, Bohol, Philippines',
             'contact_number' => '+63 912 345 6789',
-            'password' => 'secret1234',
-            'password_confirmation' => 'secret1234',
+            'password' => 'Secret1234!',
+            'password_confirmation' => 'Secret1234!',
         ]);
 
         $response->assertRedirect('/jobs');
@@ -498,7 +498,7 @@ class JobPortalTest extends TestCase
             'last_name' => 'Santos',
             'email' => 'maria.google.test@gmail.com',
             'sex' => 'Female',
-            'address' => 'Cebu City, Philippines',
+            'address' => 'Brgy. Luz, Cebu City, Cebu',
             'contact_number' => '+63 917 123 4567',
             'password' => 'secretPassword123!',
             'password_confirmation' => 'secretPassword123!',
@@ -728,5 +728,148 @@ class JobPortalTest extends TestCase
         $response->assertSessionHas('google_setup', true);
         $this->assertTrue(str_contains($response->headers->get('Location'), 'device.google.user%40gmail.com') || str_contains($response->headers->get('Location'), 'device.google.user@gmail.com'));
         $this->assertGuest();
+    }
+
+    public function test_registration_trappings_validate_all_required_fields_and_strong_password(): void
+    {
+        // Weak password (no symbols/uppercase)
+        $response = $this->post('/register', [
+            'role' => 'worker',
+            'first_name' => 'Test',
+            'last_name' => 'Worker',
+            'sex' => 'Male',
+            'email' => 'new.worker@example.com',
+            'address' => 'Brgy. San Isidro, Tagbilaran City, Bohol',
+            'contact_number' => '09123456789',
+            'password' => 'weakpass',
+            'password_confirmation' => 'weakpass',
+        ]);
+        $response->assertSessionHasErrors(['password']);
+
+        // Missing fields
+        $missingResponse = $this->post('/register', [
+            'role' => 'worker',
+            'email' => '',
+            'contact_number' => '',
+            'password' => '',
+        ]);
+        $missingResponse->assertSessionHasErrors(['first_name', 'last_name', 'sex', 'email', 'contact_number', 'address', 'password']);
+    }
+
+    public function test_registration_trappings_prevent_duplicate_email(): void
+    {
+        User::factory()->create(['email' => 'existing.user@example.com']);
+
+        $response = $this->post('/register', [
+            'role' => 'worker',
+            'first_name' => 'Juan',
+            'last_name' => 'Luna',
+            'sex' => 'Male',
+            'email' => 'existing.user@example.com',
+            'address' => 'Brgy. Poblacion, Catigbian, Bohol',
+            'contact_number' => '09123456789',
+            'password' => 'StrongPass123!',
+            'password_confirmation' => 'StrongPass123!',
+        ]);
+
+        $response->assertSessionHasErrors(['email']);
+    }
+
+    public function test_registration_trappings_enforce_11_digit_ph_mobile_number(): void
+    {
+        // Short / invalid number
+        $invalidResponse = $this->post('/register', [
+            'role' => 'worker',
+            'first_name' => 'Juan',
+            'last_name' => 'Luna',
+            'sex' => 'Male',
+            'email' => 'valid.worker1@example.com',
+            'address' => 'Brgy. Poblacion, Catigbian, Bohol',
+            'contact_number' => '08123456789', // Not starting with 09
+            'password' => 'StrongPass123!',
+            'password_confirmation' => 'StrongPass123!',
+        ]);
+        $invalidResponse->assertSessionHasErrors(['contact_number']);
+
+        // Valid 11-digit number starting with 09
+        $validResponse = $this->post('/register', [
+            'role' => 'worker',
+            'first_name' => 'Juan',
+            'last_name' => 'Luna',
+            'sex' => 'Male',
+            'email' => 'valid.worker1@example.com',
+            'address' => 'Brgy. Poblacion, Catigbian, Bohol',
+            'contact_number' => '09123456789',
+            'password' => 'StrongPass123!',
+            'password_confirmation' => 'StrongPass123!',
+        ]);
+        $validResponse->assertRedirect('/jobs');
+        $this->assertDatabaseHas('users', [
+            'email' => 'valid.worker1@example.com',
+            'contact_number' => '09123456789',
+        ]);
+    }
+
+    public function test_registration_trappings_enforce_full_address_format(): void
+    {
+        // Incomplete address (missing barangay/municipality/province format)
+        $incompleteResponse = $this->post('/register', [
+            'role' => 'worker',
+            'first_name' => 'Pedro',
+            'last_name' => 'Santos',
+            'sex' => 'Male',
+            'email' => 'pedro.santos@example.com',
+            'address' => 'Bohol', // Only 1 part
+            'contact_number' => '09123456789',
+            'password' => 'StrongPass123!',
+            'password_confirmation' => 'StrongPass123!',
+        ]);
+        $incompleteResponse->assertSessionHasErrors(['address']);
+
+        // Full address format with 3 separate fields
+        $completeResponse = $this->post('/register', [
+            'role' => 'worker',
+            'first_name' => 'Pedro',
+            'last_name' => 'Santos',
+            'sex' => 'Male',
+            'email' => 'pedro.santos@example.com',
+            'address_brgy' => 'Brgy. Ambuan',
+            'address_city' => 'Catigbian',
+            'address_province' => 'Bohol',
+            'contact_number' => '09123456789',
+            'password' => 'StrongPass123!',
+            'password_confirmation' => 'StrongPass123!',
+        ]);
+        $completeResponse->assertRedirect('/jobs');
+        $this->assertDatabaseHas('users', [
+            'email' => 'pedro.santos@example.com',
+            'address' => 'Brgy. Ambuan, Catigbian, Bohol',
+        ]);
+    }
+
+    public function test_employer_registration_requires_and_saves_sex(): void
+    {
+        $response = $this->post('/register', [
+            'role' => 'employer',
+            'company_name' => 'Bohol Digital Innovations Inc.',
+            'sex' => 'Female',
+            'email' => 'recruiter.female@example.com',
+            'address_brgy' => 'Brgy. Cogon',
+            'address_city' => 'Tagbilaran City',
+            'address_province' => 'Bohol',
+            'contact_number' => '09987654321',
+            'password' => 'EmployerSecure2026!',
+            'password_confirmation' => 'EmployerSecure2026!',
+        ]);
+
+        $response->assertRedirect(route('employer.dashboard'));
+        $this->assertDatabaseHas('users', [
+            'email' => 'recruiter.female@example.com',
+            'role' => 'employer',
+            'company_name' => 'Bohol Digital Innovations Inc.',
+            'sex' => 'Female',
+            'contact_number' => '09987654321',
+            'address' => 'Brgy. Cogon, Tagbilaran City, Bohol',
+        ]);
     }
 }
