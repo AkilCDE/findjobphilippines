@@ -155,18 +155,41 @@
                         </div>
                     </div>
 
-                    <!-- Single Clean Button -->
+                    <!-- Action Buttons: Manage/Edit/Delete for Owner Employer, or Details/Apply for Others -->
                     <div class="mt-4 pt-3 border-t border-slate-100">
-                        @php
-                            $btnText = 'View Details & Apply';
-                            if (auth()->check() && auth()->user()->isEmployer()) {
-                                $btnText = ($job->employer_id === auth()->id()) ? 'Manage My Post' : 'View Details';
-                            }
-                        @endphp
-                        <a href="{{ route('jobs.show', $job) }}"
-                            class="w-full py-2 px-3 rounded-xl {{ $job->isLocked() ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-sky-500 hover:bg-sky-600 text-white shadow-sm' }} font-bold text-xs flex items-center justify-center transition-colors">
-                            {{ $btnText }}
-                        </a>
+                        @if(auth()->check() && auth()->user()->isEmployer() && $job->employer_id === auth()->id())
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <a href="{{ route('jobs.show', $job) }}"
+                                    class="flex-1 min-w-[70px] py-2 px-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-xs text-center shadow-sm transition-all hover:scale-[1.01]">
+                                    Manage
+                                </a>
+                                <a href="{{ route('employer.posts.edit', $job) }}"
+                                    class="py-2 px-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center gap-1 transition-colors"
+                                    title="Edit Post">
+                                    <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    <span>Edit</span>
+                                </a>
+                                <button type="button"
+                                    onclick="confirmAction({
+                                        title: 'Delete Job Post Permanently?',
+                                        message: 'Are you sure you want to permanently delete \'{{ addslashes($job->title) }}\'? All associated worker applications will be removed. This cannot be undone.',
+                                        formAction: '{{ route('employer.posts.destroy', $job) }}',
+                                        method: 'DELETE',
+                                        confirmText: 'Yes, Delete Post',
+                                        confirmClass: 'bg-red-600 hover:bg-red-700 text-white'
+                                    })"
+                                    class="py-2 px-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs flex items-center gap-1 transition-colors"
+                                    title="Delete Post">
+                                    <svg class="w-3.5 h-3.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    <span>Delete</span>
+                                </button>
+                            </div>
+                        @else
+                            <a href="{{ route('jobs.show', $job) }}"
+                                class="w-full py-2 px-3 rounded-xl {{ $job->isLocked() ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-sky-500 hover:bg-sky-600 text-white shadow-sm' }} font-bold text-xs flex items-center justify-center transition-colors">
+                                {{ auth()->check() && auth()->user()->isEmployer() ? 'View Details' : 'View Details & Apply' }}
+                            </a>
+                        @endif
                     </div>
 
                 </div>

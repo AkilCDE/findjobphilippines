@@ -545,6 +545,24 @@ class JobPortalTest extends TestCase
             'status' => 'open',
         ]);
 
+        // Verify employer sees Edit and Delete buttons on public show page
+        $showResponse = $this->actingAs($employer)->get("/jobs/{$post->id}");
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('Edit Post');
+        $showResponse->assertSee('Delete Post');
+
+        // Verify employer sees Edit and Delete buttons on job catalog cards
+        $jobsResponse = $this->actingAs($employer)->get('/jobs');
+        $jobsResponse->assertStatus(200);
+        $jobsResponse->assertSee('Edit');
+        $jobsResponse->assertSee('Delete');
+
+        // Verify employer sees Edit and Delete on applicants page
+        $applicantsResponse = $this->actingAs($employer)->get("/employer/posts/{$post->id}/applicants");
+        $applicantsResponse->assertStatus(200);
+        $applicantsResponse->assertSee('Edit Post');
+        $applicantsResponse->assertSee('Delete Post');
+
         // Visit edit page
         $editPageResponse = $this->actingAs($employer)->get("/employer/posts/{$post->id}/edit");
         $editPageResponse->assertStatus(200);
