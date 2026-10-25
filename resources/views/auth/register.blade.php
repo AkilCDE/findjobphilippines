@@ -99,25 +99,39 @@
 
             <!-- WORKER SPECIFIC FIELDS -->
             <div id="workerFields" class="space-y-4 {{ $currentRole === 'employer' ? 'hidden' : '' }}">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <p class="text-xs font-black uppercase tracking-wider text-slate-800">
+                    Worker Personal Information
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label for="first_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                        <label for="worker_first_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
                             First Name <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $prefillFirst) }}"
+                        <input type="text" name="first_name" id="worker_first_name" value="{{ old('first_name', $prefillFirst) }}"
                             placeholder="First Name"
-                            class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('first_name') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('first_name') border-rose-400 bg-rose-50/30 @enderror">
                         @error('first_name')
                             <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label for="last_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                        <label for="worker_middle_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                            Middle Name
+                        </label>
+                        <input type="text" name="middle_name" id="worker_middle_name" value="{{ old('middle_name') }}"
+                            placeholder="Middle Name"
+                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('middle_name') border-rose-400 bg-rose-50/30 @enderror">
+                        @error('middle_name')
+                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label for="worker_last_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
                             Last Name <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $prefillLast) }}"
+                        <input type="text" name="last_name" id="worker_last_name" value="{{ old('last_name', $prefillLast) }}"
                             placeholder="Last Name"
-                            class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('last_name') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('last_name') border-rose-400 bg-rose-50/30 @enderror">
                         @error('last_name')
                             <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
                         @enderror
@@ -144,23 +158,66 @@
 
             <!-- EMPLOYER SPECIFIC FIELDS -->
             <div id="employerFields" class="space-y-4 {{ $currentRole === 'employer' ? '' : 'hidden' }}">
+                <p class="text-xs font-black uppercase tracking-wider text-slate-800">
+                    Employer Personal Information
+                </p>
+
+                <!-- Employer Name, Middle Name, Last Name (Requested Textfields) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label for="employer_first_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                            First Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="first_name" id="employer_first_name" value="{{ old('first_name', $prefillFirst) }}"
+                            placeholder="First Name"
+                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('first_name') border-rose-400 bg-rose-50/30 @enderror">
+                        @error('first_name')
+                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="employer_middle_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                            Middle Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="middle_name" id="employer_middle_name" value="{{ old('middle_name') }}"
+                            placeholder="Middle Name"
+                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('middle_name') border-rose-400 bg-rose-50/30 @enderror">
+                        @error('middle_name')
+                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="employer_last_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                            Last Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="last_name" id="employer_last_name" value="{{ old('last_name', $prefillLast) }}"
+                            placeholder="Last Name"
+                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('last_name') border-rose-400 bg-rose-50/30 @enderror">
+                        @error('last_name')
+                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label for="company_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                            Company / Employer Name <span class="text-red-500">*</span>
+                            Company / Business Name <span class="text-slate-400 font-normal">(Optional)</span>
                         </label>
                         <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $googleName ?? '') }}"
-                            placeholder="Company or Business Name"
+                            placeholder="e.g. Catigbian Agro Builders"
                             class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('company_name') border-rose-400 bg-rose-50/30 @enderror">
                         @error('company_name')
                             <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Employer Sex Selection (Added for Employer as requested) -->
+                    <!-- Employer Sex Selection -->
                     <div>
                         <label for="employer_sex" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                            Employer Sex <span class="text-red-500">*</span>
+                            Sex <span class="text-red-500">*</span>
                         </label>
                         <select name="employer_sex" id="employer_sex" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('sex') border-rose-400 bg-rose-50/30 @enderror">
                             <option value="">-- Select Sex --</option>
@@ -482,7 +539,15 @@
         const employerFields = document.getElementById('employerFields');
         const roleBtnWorker = document.getElementById('roleBtnWorker');
         const roleBtnEmployer = document.getElementById('roleBtnEmployer');
+
+        const workerFirstName = document.getElementById('worker_first_name');
+        const workerMiddleName = document.getElementById('worker_middle_name');
+        const workerLastName = document.getElementById('worker_last_name');
         const workerSex = document.getElementById('worker_sex');
+
+        const employerFirstName = document.getElementById('employer_first_name');
+        const employerMiddleName = document.getElementById('employer_middle_name');
+        const employerLastName = document.getElementById('employer_last_name');
         const employerSex = document.getElementById('employer_sex');
 
         roleInput.value = role;
@@ -494,19 +559,18 @@
 
             roleBtnEmployer.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-sm bg-white text-slate-950 border border-slate-200';
             roleBtnWorker.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-950';
-            
-            document.getElementById('company_name').required = true;
-            document.getElementById('first_name').required = false;
-            document.getElementById('last_name').required = false;
 
-            if (employerSex) {
-                employerSex.disabled = false;
-                employerSex.required = true;
-            }
-            if (workerSex) {
-                workerSex.disabled = true;
-                workerSex.required = false;
-            }
+            // Enable employer fields
+            employerFirstName.disabled = false;
+            employerMiddleName.disabled = false;
+            employerLastName.disabled = false;
+            employerSex.disabled = false;
+
+            // Disable worker fields
+            workerFirstName.disabled = true;
+            workerMiddleName.disabled = true;
+            workerLastName.disabled = true;
+            workerSex.disabled = true;
         } else {
             employerFields.classList.add('hidden');
             workerFields.classList.remove('hidden');
@@ -514,18 +578,17 @@
             roleBtnWorker.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-sm bg-white text-slate-950 border border-slate-200';
             roleBtnEmployer.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-950';
 
-            document.getElementById('company_name').required = false;
-            document.getElementById('first_name').required = true;
-            document.getElementById('last_name').required = true;
+            // Enable worker fields
+            workerFirstName.disabled = false;
+            workerMiddleName.disabled = false;
+            workerLastName.disabled = false;
+            workerSex.disabled = false;
 
-            if (workerSex) {
-                workerSex.disabled = false;
-                workerSex.required = true;
-            }
-            if (employerSex) {
-                employerSex.disabled = true;
-                employerSex.required = false;
-            }
+            // Disable employer fields
+            employerFirstName.disabled = true;
+            employerMiddleName.disabled = true;
+            employerLastName.disabled = true;
+            employerSex.disabled = true;
         }
     }
 
@@ -721,18 +784,18 @@
 
         // 1. Worker Trapping
         if (role === 'worker') {
-            const firstName = document.getElementById('first_name').value.trim();
-            const lastName = document.getElementById('last_name').value.trim();
+            const firstName = document.getElementById('worker_first_name').value.trim();
+            const lastName = document.getElementById('worker_last_name').value.trim();
             const sex = document.getElementById('worker_sex').value;
 
             if (!firstName) {
                 e.preventDefault();
-                showClientError('First Name Required', 'Please fill in your first name.', document.getElementById('first_name'));
+                showClientError('First Name Required', 'Please fill in your first name.', document.getElementById('worker_first_name'));
                 return false;
             }
             if (!lastName) {
                 e.preventDefault();
-                showClientError('Last Name Required', 'Please fill in your last name.', document.getElementById('last_name'));
+                showClientError('Last Name Required', 'Please fill in your last name.', document.getElementById('worker_last_name'));
                 return false;
             }
             if (!sex) {
@@ -742,14 +805,26 @@
             }
         }
 
-        // 2. Employer Trapping
+        // 2. Employer Trapping (Employer name, lastname, middle name)
         if (role === 'employer') {
-            const companyName = document.getElementById('company_name').value.trim();
+            const firstName = document.getElementById('employer_first_name').value.trim();
+            const middleName = document.getElementById('employer_middle_name').value.trim();
+            const lastName = document.getElementById('employer_last_name').value.trim();
             const employerSex = document.getElementById('employer_sex').value;
 
-            if (!companyName) {
+            if (!firstName) {
                 e.preventDefault();
-                showClientError('Company Name Required', 'Please fill in your company or business name.', document.getElementById('company_name'));
+                showClientError('Employer First Name Required', 'Please fill in the employer first name.', document.getElementById('employer_first_name'));
+                return false;
+            }
+            if (!middleName) {
+                e.preventDefault();
+                showClientError('Employer Middle Name Required', 'Please fill in the employer middle name.', document.getElementById('employer_middle_name'));
+                return false;
+            }
+            if (!lastName) {
+                e.preventDefault();
+                showClientError('Employer Last Name Required', 'Please fill in the employer last name.', document.getElementById('employer_last_name'));
                 return false;
             }
             if (!employerSex) {

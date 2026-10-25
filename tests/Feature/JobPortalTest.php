@@ -847,10 +847,13 @@ class JobPortalTest extends TestCase
         ]);
     }
 
-    public function test_employer_registration_requires_and_saves_sex(): void
+    public function test_employer_registration_requires_and_saves_sex_and_names(): void
     {
         $response = $this->post('/register', [
             'role' => 'employer',
+            'first_name' => 'Maria',
+            'middle_name' => 'Clara',
+            'last_name' => 'De Los Santos',
             'company_name' => 'Bohol Digital Innovations Inc.',
             'sex' => 'Female',
             'email' => 'recruiter.female@example.com',
@@ -866,6 +869,9 @@ class JobPortalTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'recruiter.female@example.com',
             'role' => 'employer',
+            'first_name' => 'Maria',
+            'middle_name' => 'Clara',
+            'last_name' => 'De Los Santos',
             'company_name' => 'Bohol Digital Innovations Inc.',
             'sex' => 'Female',
             'contact_number' => '09987654321',

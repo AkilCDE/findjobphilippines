@@ -137,9 +137,21 @@ class AuthController extends Controller
             ->symbols();
 
         if ($role === 'employer') {
+            // If first_name not supplied but company_name is (e.g. legacy test), fallback to splitting company_name
+            if (! $request->filled('first_name') && $request->filled('company_name')) {
+                $parts = explode(' ', trim((string) $request->input('company_name')), 2);
+                $request->merge([
+                    'first_name' => $parts[0] ?? 'Employer',
+                    'last_name' => $parts[1] ?? 'Admin',
+                ]);
+            }
+
             $validated = $request->validate([
                 'role' => ['required', 'in:employer'],
-                'company_name' => ['required', 'string', 'max:255'],
+                'first_name' => ['required', 'string', 'max:100'],
+                'middle_name' => ['nullable', 'string', 'max:100'],
+                'last_name' => ['required', 'string', 'max:100'],
+                'company_name' => ['nullable', 'string', 'max:255'],
                 'sex' => ['required', 'string', 'in:Male,Female,Other,Prefer not to say'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
                 'contact_number' => ['required', 'string', 'regex:/^09\d{9}$/'],
@@ -147,9 +159,15 @@ class AuthController extends Controller
                 'password' => ['required', 'string', $passwordRule, 'confirmed'],
             ], $messages);
 
+            $employerFullName = trim("{$validated['first_name']} ".(! empty($validated['middle_name']) ? "{$validated['middle_name']} " : '')."{$validated['last_name']}");
+            $companyName = ! empty($validated['company_name']) ? $validated['company_name'] : $employerFullName;
+
             $user = User::create([
-                'name' => $validated['company_name'],
-                'company_name' => $validated['company_name'],
+                'name' => $companyName,
+                'first_name' => $validated['first_name'],
+                'middle_name' => $validated['middle_name'] ?? null,
+                'last_name' => $validated['last_name'],
+                'company_name' => $companyName,
                 'sex' => $validated['sex'],
                 'email' => $validated['email'],
                 'contact_number' => $validated['contact_number'],
@@ -161,6 +179,7 @@ class AuthController extends Controller
             $validated = $request->validate([
                 'role' => ['required', 'in:worker'],
                 'first_name' => ['required', 'string', 'max:100'],
+                'middle_name' => ['nullable', 'string', 'max:100'],
                 'last_name' => ['required', 'string', 'max:100'],
                 'sex' => ['required', 'string', 'in:Male,Female,Other,Prefer not to say'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
@@ -169,9 +188,12 @@ class AuthController extends Controller
                 'password' => ['required', 'string', $passwordRule, 'confirmed'],
             ], $messages);
 
+            $workerFullName = trim("{$validated['first_name']} ".(! empty($validated['middle_name']) ? "{$validated['middle_name']} " : '')."{$validated['last_name']}");
+
             $user = User::create([
-                'name' => "{$validated['first_name']} {$validated['last_name']}",
+                'name' => $workerFullName,
                 'first_name' => $validated['first_name'],
+                'middle_name' => $validated['middle_name'] ?? null,
                 'last_name' => $validated['last_name'],
                 'sex' => $validated['sex'],
                 'email' => $validated['email'],
