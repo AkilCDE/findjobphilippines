@@ -176,13 +176,33 @@
                                     </a>
                                 </td>
                                 <td class="py-3.5 px-3 text-right">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <a href="{{ route('employer.posts.applicants', $post) }}" class="p-1.5 rounded-lg bg-sky-50 text-sky-800 hover:bg-sky-100" title="Review Applicants">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                    <div class="flex items-center justify-end gap-2 flex-wrap">
+                                        <a href="{{ route('employer.posts.applicants', $post) }}"
+                                            class="px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-800 hover:bg-sky-100 font-bold text-xs flex items-center gap-1 transition-colors"
+                                            title="Review Applicants">
+                                            <svg class="w-3.5 h-3.5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                            <span>Applicants ({{ $post->applications_count }})</span>
                                         </a>
-                                        <a href="{{ route('employer.posts.edit', $post) }}" class="p-1.5 rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200" title="Edit Post">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                        <a href="{{ route('employer.posts.edit', $post) }}"
+                                            class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center gap-1 transition-colors"
+                                            title="Edit Post">
+                                            <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                            <span>Edit</span>
                                         </a>
+                                        <button type="button"
+                                            onclick="confirmAction({
+                                                title: 'Delete Job Post Permanently?',
+                                                message: 'Are you sure you want to permanently delete \'{{ addslashes($post->title) }}\'? All associated worker applications will be removed. This cannot be undone.',
+                                                formAction: '{{ route('employer.posts.destroy', $post) }}',
+                                                method: 'DELETE',
+                                                confirmText: 'Yes, Delete Post',
+                                                confirmClass: 'bg-red-600 hover:bg-red-700 text-white'
+                                            })"
+                                            class="px-2.5 py-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs flex items-center gap-1 transition-colors"
+                                            title="Delete Post">
+                                            <svg class="w-3.5 h-3.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            <span>Delete</span>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

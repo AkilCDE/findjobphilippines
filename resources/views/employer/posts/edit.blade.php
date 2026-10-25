@@ -233,14 +233,32 @@
         </div>
 
         <!-- Actions -->
-        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-            <a href="{{ route('employer.posts.index') }}" class="px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs">
-                Cancel
-            </a>
-            <button type="submit"
-                class="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all">
-                Save Changes
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+            <button type="button"
+                onclick="confirmAction({
+                    title: 'Delete Job Post Permanently?',
+                    message: 'Are you sure you want to permanently delete \'{{ addslashes($jobPost->title) }}\'? All associated worker applications will also be deleted. This cannot be undone.',
+                    formAction: '{{ route('employer.posts.destroy', $jobPost) }}',
+                    method: 'DELETE',
+                    confirmText: 'Yes, Delete Post',
+                    confirmClass: 'bg-red-600 hover:bg-red-700 text-white'
+                })"
+                class="px-4 py-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs flex items-center gap-1.5 transition-colors">
+                <svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Delete Post</span>
             </button>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ route('employer.posts.index') }}" class="px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 transition-all">
+                    Save Changes
+                </button>
+            </div>
         </div>
 
     </form>

@@ -407,6 +407,18 @@
                                     class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs transition-colors">
                                     Edit Post
                                 </a>
+                                <button type="button"
+                                    onclick="confirmAction({
+                                        title: 'Delete Job Post Permanently?',
+                                        message: 'Are you sure you want to delete \'{{ addslashes($jobPost->title) }}\'? All associated worker applications will be removed. This cannot be undone.',
+                                        formAction: '{{ route('employer.posts.destroy', $jobPost) }}',
+                                        method: 'DELETE',
+                                        confirmText: 'Yes, Delete Post',
+                                        confirmClass: 'bg-red-600 hover:bg-red-700 text-white'
+                                    })"
+                                    class="px-4 py-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs transition-colors">
+                                    Delete Post
+                                </button>
                             </div>
                         @else
                             <!-- Other Employer Viewing This Post (Employer-to-Employer) -->
@@ -513,6 +525,18 @@
                                 class="w-full py-2 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center justify-center">
                                 Edit Post
                             </a>
+                            <button type="button"
+                                onclick="confirmAction({
+                                    title: 'Delete Job Post Permanently?',
+                                    message: 'Are you sure you want to delete \'{{ addslashes($jobPost->title) }}\'? All associated applications will be removed.',
+                                    formAction: '{{ route('employer.posts.destroy', $jobPost) }}',
+                                    method: 'DELETE',
+                                    confirmText: 'Yes, Delete Post',
+                                    confirmClass: 'bg-red-600 hover:bg-red-700 text-white'
+                                })"
+                                class="w-full py-2 px-3 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs flex items-center justify-center transition-colors">
+                                Delete Post
+                            </button>
                         </div>
                     @endif
                 @endauth

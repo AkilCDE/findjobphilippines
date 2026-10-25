@@ -524,4 +524,128 @@ class JobPortalTest extends TestCase
         $loginResponse->assertRedirect(route('jobs.index'));
         $this->assertAuthenticated();
     }
+
+    public function test_employer_can_edit_own_job_post(): void
+    {
+        $employer = User::factory()->create(['role' => 'employer']);
+
+        $post = JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Initial Title',
+            'category' => 'Retail & Sales',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱600 / day',
+            'workers_needed' => 2,
+            'workers_hired' => 0,
+            'location_address' => 'Quezon City',
+            'latitude' => 14.6760,
+            'longitude' => 121.0437,
+            'requirements' => 'Valid ID',
+            'description' => 'Initial description',
+            'status' => 'open',
+        ]);
+
+        // Visit edit page
+        $editPageResponse = $this->actingAs($employer)->get("/employer/posts/{$post->id}/edit");
+        $editPageResponse->assertStatus(200);
+        $editPageResponse->assertSee('Edit Job Post');
+
+        // Submit update
+        $updateResponse = $this->actingAs($employer)->put("/employer/posts/{$post->id}", [
+            'title' => 'Updated Retail Supervisor',
+            'category' => 'Retail & Sales',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱850 / day',
+            'workers_needed' => 3,
+            'location_address' => 'Quezon City Central',
+            'latitude' => 14.6760,
+            'longitude' => 121.0437,
+            'requirements' => 'Valid ID, High School Diploma, NBI Clearance',
+            'description' => 'Supervise retail floor operations.',
+        ]);
+
+        $updateResponse->assertRedirect(route('employer.posts.index'));
+        $this->assertDatabaseHas('job_posts', [
+            'id' => $post->id,
+            'title' => 'Updated Retail Supervisor',
+            'requirements' => 'Valid ID, High School Diploma, NBI Clearance',
+            'workers_needed' => 3,
+        ]);
+    }
+
+    public function test_employer_can_delete_own_job_post(): void
+    {
+        $employer = User::factory()->create(['role' => 'employer']);
+
+        $post = JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Job To Delete',
+            'category' => 'General Labor',
+            'job_type' => 'Full-time',
+            'workers_needed' => 1,
+            'workers_hired' => 0,
+            'location_address' => 'Davao City',
+            'latitude' => 7.1907,
+            'longitude' => 125.4553,
+            'requirements' => 'Barangay Clearance',
+            'description' => 'Short term work.',
+            'status' => 'open',
+        ]);
+
+        $deleteResponse = $this->actingAs($employer)->delete("/employer/posts/{$post->id}");
+        $deleteResponse->assertRedirect(route('employer.posts.index'));
+
+        $this->assertDatabaseMissing('job_posts', [
+            'id' => $post->id,
+        ]);
+    }
+
+    public function test_employer_cannot_edit_or_delete_another_employer_job_post(): void
+    {
+        $employer1 = User::factory()->create(['role' => 'employer']);
+        $employer2 = User::factory()->create(['role' => 'employer']);
+
+        $post = JobPost::create([
+            'employer_id' => $employer1->id,
+            'title' => 'Employer 1 Post',
+            'category' => 'General Labor',
+            'job_type' => 'Full-time',
+            'workers_needed' => 1,
+            'workers_hired' => 0,
+            'location_address' => 'Manila',
+            'latitude' => 14.5995,
+            'longitude' => 120.9842,
+            'requirements' => 'Valid ID',
+            'description' => 'Work details',
+            'status' => 'open',
+        ]);
+
+        // Employer 2 attempts to edit Employer 1's post
+        $editResponse = $this->actingAs($employer2)->get("/employer/posts/{$post->id}/edit");
+        $editResponse->assertStatus(403);
+
+        // Employer 2 attempts to update Employer 1's post
+        $updateResponse = $this->actingAs($employer2)->put("/employer/posts/{$post->id}", [
+            'title' => 'Hacked Title',
+            'category' => 'General Labor',
+            'job_type' => 'Full-time',
+            'workers_needed' => 5,
+            'location_address' => 'Manila',
+            'latitude' => 14.5995,
+            'longitude' => 120.9842,
+            'requirements' => 'Valid ID',
+            'description' => 'Work details',
+        ]);
+        $updateResponse->assertStatus(403);
+
+        // Employer 2 attempts to delete Employer 1's post
+        $deleteResponse = $this->actingAs($employer2)->delete("/employer/posts/{$post->id}");
+        $deleteResponse->assertStatus(403);
+
+        // Post should still exist in database unchanged
+        $this->assertDatabaseHas('job_posts', [
+            'id' => $post->id,
+            'title' => 'Employer 1 Post',
+        ]);
+    }
 }
