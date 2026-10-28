@@ -7,6 +7,7 @@ use App\Models\JobPost;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -680,17 +681,63 @@ class JobPortalTest extends TestCase
         $msgResponse->assertSee('id="adminSidebar"', false);
         $msgResponse->assertSee('Admin Portal');
 
-        // 2. Job Portal
+        // 2. Job Portal (Browse Jobs - Has NO navbar, but has Back to Admin Dashboard button)
         $jobsResponse = $this->actingAs($admin)->get('/jobs');
         $jobsResponse->assertStatus(200);
-        $jobsResponse->assertSee('id="adminSidebar"', false);
-        $jobsResponse->assertSee('Admin Portal');
+        $jobsResponse->assertDontSee('id="adminSidebar"', false);
+        $jobsResponse->assertSee('Back to Admin Dashboard');
 
         // 3. Philippine Map
         $mapResponse = $this->actingAs($admin)->get('/jobs/map');
         $mapResponse->assertStatus(200);
         $mapResponse->assertSee('id="adminSidebar"', false);
         $mapResponse->assertSee('Admin Portal');
+    }
+
+    public function test_employer_and_worker_have_left_sidebar_and_jobs_browsing_has_no_navbar(): void
+    {
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'email' => 'emp_sidebar@example.com',
+            'company_name' => 'Acme Corp',
+        ]);
+
+        $worker = User::factory()->create([
+            'role' => 'worker',
+            'email' => 'worker_sidebar@example.com',
+            'first_name' => 'Juan',
+            'last_name' => 'Dela Cruz',
+        ]);
+
+        // 1. Employer Dashboard has left sidebar, collapse button, mobile-only hamburger, and desktop reopen button
+        $empDashResponse = $this->actingAs($employer)->get('/employer/dashboard');
+        $empDashResponse->assertStatus(200);
+        $empDashResponse->assertSee('id="appSidebar"', false);
+        $empDashResponse->assertSee('Employer Portal');
+        $empDashResponse->assertSee('toggleAppSidebar()', false);
+        $empDashResponse->assertSee('id="desktopSidebarOpenBtn"', false);
+        $empDashResponse->assertSee('lg:hidden');
+
+        // 2. Worker Applications page has left sidebar, collapse button, mobile-only hamburger, and desktop reopen button
+        $workerDashResponse = $this->actingAs($worker)->get('/worker/applications');
+        $workerDashResponse->assertStatus(200);
+        $workerDashResponse->assertSee('id="appSidebar"', false);
+        $workerDashResponse->assertSee('Worker Portal');
+        $workerDashResponse->assertSee('toggleAppSidebar()', false);
+        $workerDashResponse->assertSee('id="desktopSidebarOpenBtn"', false);
+        $workerDashResponse->assertSee('lg:hidden');
+
+        // 3. Employer browsing jobs has NO navbar and has Back to Employer Dashboard button
+        $empJobsResponse = $this->actingAs($employer)->get('/jobs');
+        $empJobsResponse->assertStatus(200);
+        $empJobsResponse->assertDontSee('id="appSidebar"', false);
+        $empJobsResponse->assertSee('Back to Employer Dashboard');
+
+        // 4. Worker browsing jobs has NO navbar and has Back to Worker Dashboard button
+        $workerJobsResponse = $this->actingAs($worker)->get('/jobs');
+        $workerJobsResponse->assertStatus(200);
+        $workerJobsResponse->assertDontSee('id="appSidebar"', false);
+        $workerJobsResponse->assertSee('Back to Worker Dashboard');
     }
 
     public function test_admin_user_management_displays_separated_employer_and_worker_containers(): void
@@ -982,10 +1029,10 @@ class JobPortalTest extends TestCase
         $jobsResponse->assertSee('bg-[#09090b]');
         $jobsResponse->assertSee('bg-[#121215]');
 
-        // 3. Map view uses CartoDB Dark Matter tiles
+        // 3. Map view uses 100% Free OpenStreetMap tiles with zero API key
         $mapResponse = $this->get('/jobs/map');
         $mapResponse->assertStatus(200);
-        $mapResponse->assertSee('basemaps.cartocdn.com/dark_all');
+        $mapResponse->assertSee('tile.openstreetmap.org');
         $mapResponse->assertSee('bg-[#09090b]');
 
         // 4. Direct Messages page is in dark mode
@@ -1364,5 +1411,40 @@ class JobPortalTest extends TestCase
         $this->assertSame('Carlos', $employer->first_name);
         $this->assertSame('09334455667', $employer->contact_number);
         $this->assertSame('Brgy. Manga, Tagbilaran City, Bohol', $employer->address);
+    }
+
+    public function test_philippine_map_page_loads_with_zero_api_key_tiles(): void
+    {
+        $response = $this->get('/jobs/map');
+        $response->assertStatus(200);
+        $response->assertSee('philippineJobsMap');
+        $response->assertSee('tile.openstreetmap.org');
+        $response->assertDontSee('basemaps.cartocdn.com');
+    }
+
+    public function test_reverse_geocode_api_endpoint_handles_coordinates(): void
+    {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/*' => Http::response([
+                'display_name' => 'Rizal Park, Ermita, Manila, Metro Manila, Philippines',
+            ], 200),
+        ]);
+
+        $response = $this->get('/api/reverse-geocode?lat=14.5832&lng=120.9794');
+        $response->assertStatus(200);
+        $response->assertJson([
+            'address' => 'Rizal Park, Ermita, Manila, Metro Manila, Philippines',
+            'latitude' => 14.5832,
+            'longitude' => 120.9794,
+        ]);
+    }
+
+    public function test_reverse_geocode_validates_invalid_coordinates(): void
+    {
+        $response = $this->get('/api/reverse-geocode?lat=abc&lng=def');
+        $response->assertStatus(400);
+        $response->assertJson([
+            'error' => 'Invalid coordinates',
+        ]);
     }
 }

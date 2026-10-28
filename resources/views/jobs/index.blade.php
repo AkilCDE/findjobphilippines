@@ -3,12 +3,50 @@
 @section('content')
 <div class="space-y-6 text-zinc-100">
 
-    <!-- Navigation Breadcrumb -->
-    <div>
-        <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white transition-colors">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-            Back to Home
-        </a>
+    <!-- Dedicated Back-to-Dashboard Header (No Navbar on Browsing Page) -->
+    <div class="flex items-center justify-between pb-3 border-b border-zinc-850">
+        <div>
+            @auth
+                @if(auth()->user()->isEmployer())
+                    <a href="{{ route('employer.dashboard') }}"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-750 text-xs font-bold transition-all shadow-sm group">
+                        <svg class="w-4 h-4 text-zinc-300 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        <span>Back to Employer Dashboard</span>
+                    </a>
+                @elseif(auth()->user()->isWorker())
+                    <a href="{{ route('worker.applications') }}"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-750 text-xs font-bold transition-all shadow-sm group">
+                        <svg class="w-4 h-4 text-zinc-300 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        <span>Back to Worker Dashboard</span>
+                    </a>
+                @elseif(auth()->user()->isAdmin())
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-750 text-xs font-bold transition-all shadow-sm group">
+                        <svg class="w-4 h-4 text-zinc-300 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        <span>Back to Admin Dashboard</span>
+                    </a>
+                @endif
+            @else
+                <a href="{{ route('home') }}"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-750 text-xs font-bold transition-all shadow-sm group">
+                    <svg class="w-4 h-4 text-zinc-300 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    <span>Back to Home</span>
+                </a>
+            @endauth
+        </div>
+
+        <div class="flex items-center gap-2.5">
+            <a href="{{ route('jobs.map') }}"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-bold transition-colors">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                <span>Philippine Map</span>
+            </a>
+            @guest
+                <a href="{{ route('login') }}" class="px-3.5 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-extrabold shadow-sm transition-all">
+                    Sign In
+                </a>
+            @endguest
+        </div>
     </div>
 
     <!-- Attracting Header Section (Dark Mode) -->

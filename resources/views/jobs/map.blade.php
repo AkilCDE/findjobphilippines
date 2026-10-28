@@ -44,9 +44,15 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Locked (Full)
                     </span>
                 </div>
-                <button type="button" onclick="resetMapView()" class="text-zinc-300 hover:text-white font-bold transition-colors">
-                    Reset Map Center
-                </button>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="toggleMapMode()" class="text-zinc-300 hover:text-white font-bold transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-750 border border-zinc-700">
+                        <svg class="w-3.5 h-3.5 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                        <span>Toggle Contrast</span>
+                    </button>
+                    <button type="button" onclick="resetMapView()" class="text-zinc-300 hover:text-white font-bold transition-colors">
+                        Reset Map Center
+                    </button>
+                </div>
             </div>
 
             <!-- Leaflet Map Element -->
@@ -126,11 +132,15 @@
             scrollWheelZoom: true
         });
 
-        // CartoDB Dark Matter tiles for pure dark mode
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO | Findjobph',
+        // 100% Free OpenStreetMap standard tiles (Zero API Key required)
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors | Findjobph',
             maxZoom: 19
         }).addTo(map);
+
+        setTimeout(() => {
+            if (map) map.invalidateSize();
+        }, 200);
 
         const openIcon = L.divIcon({
             className: 'custom-pin-open',
@@ -199,6 +209,13 @@
     function resetMapView() {
         if (map) {
             map.flyTo(defaultCenter, defaultZoom, { duration: 1 });
+        }
+    }
+
+    function toggleMapMode() {
+        const mapEl = document.getElementById('philippineJobsMap');
+        if (mapEl) {
+            mapEl.classList.toggle('light-tiles');
         }
     }
 </script>

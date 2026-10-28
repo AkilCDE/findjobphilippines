@@ -28,6 +28,40 @@
         svg {
             max-width: 100%;
         }
+
+        /* Sidebar hide / show transitions */
+        #appSidebar, #adminSidebar {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #mainContentWrapper {
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Desktop Sidebar Collapsed State (>= 1024px) */
+        @media (min-width: 1024px) {
+            body.sidebar-collapsed #appSidebar,
+            body.sidebar-collapsed #adminSidebar {
+                transform: translateX(-100%) !important;
+            }
+            body.sidebar-collapsed #mainContentWrapper {
+                padding-left: 0 !important;
+            }
+            body.sidebar-collapsed #desktopSidebarOpenBtn {
+                display: inline-flex !important;
+            }
+        }
+
+        /* Mobile Sidebar Drawer Open State (< 1024px) */
+        @media (max-width: 1023px) {
+            body.sidebar-mobile-open #appSidebar,
+            body.sidebar-mobile-open #adminSidebar {
+                transform: translateX(0) !important;
+            }
+            body.sidebar-mobile-open #adminSidebarBackdrop,
+            body.sidebar-mobile-open #sidebarBackdrop {
+                display: block !important;
+            }
+        }
     </style>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -39,7 +73,7 @@
     <div class="flex-1 flex min-h-screen">
 
         <!-- ==================== MAIN CONTENT AREA (Offset by sidebar on lg) ==================== -->
-        <div class="flex-1 lg:pl-64 flex flex-col min-w-0 bg-[#09090b]">
+        <div id="mainContentWrapper" class="flex-1 lg:pl-64 flex flex-col min-w-0 bg-[#09090b]">
             
             <main class="flex-grow p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
                 
@@ -110,22 +144,46 @@
     <!-- Scripts -->
     <script>
         function toggleAdminSidebar(show) {
-            const sidebar = document.getElementById('adminSidebar');
-            const backdrop = document.getElementById('adminSidebarBackdrop');
-            if (!sidebar || !backdrop) return;
-            if (typeof show === 'boolean') {
-                if (show) {
-                    sidebar.classList.remove('-translate-x-full');
-                    backdrop.classList.remove('hidden');
+            const isDesktop = window.innerWidth >= 1024;
+
+            if (isDesktop) {
+                const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+                const shouldShow = (typeof show === 'boolean') ? show : isCollapsed;
+
+                if (shouldShow) {
+                    document.body.classList.remove('sidebar-collapsed');
+                    try { localStorage.setItem('sidebar_collapsed', '0'); } catch(e) {}
                 } else {
-                    sidebar.classList.add('-translate-x-full');
-                    backdrop.classList.add('hidden');
+                    document.body.classList.add('sidebar-collapsed');
+                    try { localStorage.setItem('sidebar_collapsed', '1'); } catch(e) {}
                 }
+                document.body.classList.remove('sidebar-mobile-open');
+                document.body.classList.remove('overflow-hidden');
             } else {
-                sidebar.classList.toggle('-translate-x-full');
-                backdrop.classList.toggle('hidden');
+                const isOpen = document.body.classList.contains('sidebar-mobile-open');
+                const shouldOpen = (typeof show === 'boolean') ? show : !isOpen;
+
+                if (shouldOpen) {
+                    document.body.classList.add('sidebar-mobile-open');
+                    document.body.classList.add('overflow-hidden');
+                } else {
+                    document.body.classList.remove('sidebar-mobile-open');
+                    document.body.classList.remove('overflow-hidden');
+                }
             }
         }
+        window.toggleAppSidebar = toggleAdminSidebar;
+
+        // Restore sidebar state immediately on load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.innerWidth >= 1024) {
+                try {
+                    if (localStorage.getItem('sidebar_collapsed') === '1') {
+                        document.body.classList.add('sidebar-collapsed');
+                    }
+                } catch(e) {}
+            }
+        });
 
         function confirmAction({ title, message, formAction, method = 'POST', confirmText = 'Confirm', confirmClass = 'bg-white hover:bg-zinc-200 text-black' }) {
             const modal = document.getElementById('universalConfirmModal');

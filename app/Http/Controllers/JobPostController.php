@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\JobPost;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 
 class JobPostController extends Controller
@@ -212,5 +215,48 @@ class JobPostController extends Controller
         }
 
         return view('jobs.show', compact('jobPost', 'userApplication'));
+    }
+
+    /**
+     * Reverse geocode latitude and longitude to an address without requiring any client API key.
+     */
+    public function reverseGeocode(Request $request): JsonResponse
+    {
+        $lat = $request->query('lat');
+        $lng = $request->query('lng');
+
+        if (! is_numeric($lat) || ! is_numeric($lng)) {
+            return response()->json(['error' => 'Invalid coordinates'], 400);
+        }
+
+        $cacheKey = 'geo_rev_'.round((float) $lat, 4).'_'.round((float) $lng, 4);
+
+        $address = Cache::remember($cacheKey, 86400, function () use ($lat, $lng) {
+            try {
+                $response = Http::timeout(5)
+                    ->withUserAgent('FindJobPH-App/1.0 (info@findjobph.local)')
+                    ->get('https://nominatim.openstreetmap.org/reverse', [
+                        'format' => 'json',
+                        'lat' => $lat,
+                        'lon' => $lng,
+                        'zoom' => 16,
+                        'addressdetails' => 1,
+                    ]);
+
+                if ($response->successful()) {
+                    return $response->json('display_name');
+                }
+            } catch (\Throwable $e) {
+                // Ignore network exceptions
+            }
+
+            return null;
+        });
+
+        return response()->json([
+            'address' => $address,
+            'latitude' => (float) $lat,
+            'longitude' => (float) $lng,
+        ]);
     }
 }

@@ -288,11 +288,15 @@
             scrollWheelZoom: false
         });
 
-        // CartoDB Dark Matter tiles
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO | Findjobph',
+        // 100% Free OpenStreetMap standard tiles (Zero API Key required)
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors | Findjobph',
             maxZoom: 19
         }).addTo(pickerMap);
+
+        setTimeout(() => {
+            if (pickerMap) pickerMap.invalidateSize();
+        }, 200);
 
         const customPin = L.divIcon({
             className: 'custom-pin-draggable',
@@ -334,13 +338,13 @@
     }
 
     function reverseGeocode(lat, lng) {
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&addressdetails=1`, {
-            headers: { 'Accept-Language': 'en' }
+        fetch(`/api/reverse-geocode?lat=${lat}&lng=${lng}`, {
+            headers: { 'Accept': 'application/json' }
         })
         .then(res => res.json())
         .then(data => {
-            if (data && data.display_name) {
-                document.getElementById('location_address').value = data.display_name;
+            if (data && data.address) {
+                document.getElementById('location_address').value = data.address;
             }
         })
         .catch(err => {

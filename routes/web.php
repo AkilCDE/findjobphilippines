@@ -19,6 +19,7 @@ Route::get('/', [JobPostController::class, 'landing'])->name('home');
 Route::get('/jobs', [JobPostController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/map', [JobPostController::class, 'map'])->name('jobs.map');
 Route::get('/jobs/{jobPost}', [JobPostController::class, 'show'])->name('jobs.show');
+Route::get('/api/reverse-geocode', [JobPostController::class, 'reverseGeocode'])->name('api.reverse-geocode');
 
 /*
 |--------------------------------------------------------------------------
