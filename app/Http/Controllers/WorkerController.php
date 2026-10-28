@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\JobApplication;
 use App\Models\JobPost;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +32,8 @@ class WorkerController extends Controller
         $pendingCount = JobApplication::where('worker_id', $user->id)->where('status', 'pending')->count();
         $rejectedCount = JobApplication::where('worker_id', $user->id)->whereIn('status', ['rejected', 'fired', 'resigned'])->count();
         $activeEngagement = $user->activeJobApplication();
+        $qrProfile = $user->getQrProfileData();
+        $qrPayload = $user->getQrPayloadString();
 
         return view('worker.applications', compact(
             'applications',
@@ -37,8 +41,52 @@ class WorkerController extends Controller
             'hiredCount',
             'pendingCount',
             'rejectedCount',
-            'activeEngagement'
+            'activeEngagement',
+            'qrProfile',
+            'qrPayload'
         ));
+    }
+
+    /**
+     * Display full-page printable digital QR pass for worker.
+     */
+    public function qrPass(): View
+    {
+        $user = Auth::user();
+        $qrProfile = $user->getQrProfileData();
+        $qrPayload = $user->getQrPayloadString();
+
+        return view('worker.qr-pass', compact('user', 'qrProfile', 'qrPayload'));
+    }
+
+    /**
+     * Public / verified view of a worker's digital QR profile.
+     */
+    public function verifyQr(Request $request, string $token): View|JsonResponse
+    {
+        $worker = User::findByQrToken($token);
+
+        if (! $worker) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or unrecognized worker QR code.',
+                ], 404);
+            }
+
+            abort(404, 'Worker digital pass not found or QR token is invalid.');
+        }
+
+        $qrProfile = $worker->getQrProfileData();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'worker' => $qrProfile,
+            ]);
+        }
+
+        return view('worker.qr-verify', compact('worker', 'qrProfile'));
     }
 
     /**

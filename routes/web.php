@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployerController;
 use App\Http\Controllers\JobPostController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkerController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,9 +14,7 @@ use Illuminate\Support\Facades\Route;
 | Public Routes & Job Discovery
 |--------------------------------------------------------------------------
 */
-Route::get('/', function () {
-    return redirect()->route('jobs.index');
-});
+Route::get('/', [JobPostController::class, 'landing'])->name('home');
 
 Route::get('/jobs', [JobPostController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/map', [JobPostController::class, 'map'])->name('jobs.map');
@@ -51,10 +50,18 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 Route::middleware(['auth', 'role:worker'])->group(function () {
     Route::post('/jobs/{jobPost}/apply', [WorkerController::class, 'apply'])->name('worker.apply');
     Route::get('/worker/applications', [WorkerController::class, 'applications'])->name('worker.applications');
+    Route::get('/worker/qr-pass', [WorkerController::class, 'qrPass'])->name('worker.qr-pass');
     Route::delete('/worker/applications/{application}', [WorkerController::class, 'cancelApplication'])->name('worker.applications.cancel');
     Route::post('/worker/applications/{application}/request-leave', [WorkerController::class, 'requestLeave'])->name('worker.applications.request-leave');
     Route::post('/worker/applications/{application}/cancel-leave', [WorkerController::class, 'cancelLeave'])->name('worker.applications.cancel-leave');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Public QR Code Verification Route
+|--------------------------------------------------------------------------
+*/
+Route::get('/qr/verify/{token}', [WorkerController::class, 'verifyQr'])->name('worker.qr.verify');
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +70,8 @@ Route::middleware(['auth', 'role:worker'])->group(function () {
 */
 Route::middleware(['auth', 'role:employer'])->prefix('employer')->name('employer.')->group(function () {
     Route::get('/dashboard', [EmployerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/scanner', [EmployerController::class, 'scanner'])->name('scanner');
+    Route::post('/scan-worker-qr', [EmployerController::class, 'scanWorkerQr'])->name('scan-worker-qr');
     Route::get('/posts', [EmployerController::class, 'posts'])->name('posts.index');
     Route::get('/posts/create', [EmployerController::class, 'create'])->name('posts.create');
     Route::post('/posts', [EmployerController::class, 'store'])->name('posts.store');
@@ -95,6 +104,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/posts', [AdminController::class, 'posts'])->name('posts.index');
     Route::post('/posts/{jobPost}/toggle-status', [AdminController::class, 'toggleStatus'])->name('posts.toggle-status');
     Route::delete('/posts/{jobPost}', [AdminController::class, 'deletePost'])->name('posts.destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
+| User Profile & Account Management Routes (Worker & Employer)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
 
 /*

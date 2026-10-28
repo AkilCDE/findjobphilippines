@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050507" />
+      <stop offset="40%" stop-color="#0c0d12" />
+      <stop offset="80%" stop-color="#09090d" />
+      <stop offset="100%" stop-color="#050506" />
+    </linearGradient>
+
+    <!-- Ambient Glowing Orbs -->
+    <radialGradient id="emeraldGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.18" />
+      <stop offset="50%" stop-color="#059669" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#059669" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="skyGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.16" />
+      <stop offset="60%" stop-color="#0369a1" stop-opacity="0.06" />
+      <stop offset="100%" stop-color="#0369a1" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="indigoGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.14" />
+      <stop offset="70%" stop-color="#4f46e5" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#4f46e5" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Skyline Silhouette Gradient -->
+    <linearGradient id="skylineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#18181f" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="#09090c" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="frontSkylineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e1e26" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#0c0d12" stop-opacity="0.9" />
+    </linearGradient>
+
+    <!-- Grid Pattern -->
+    <pattern id="isoGrid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#27272a" stroke-width="0.75" stroke-opacity="0.25" />
+      <circle cx="60" cy="0" r="1.5" fill="#3f3f46" fill-opacity="0.4" />
+    </pattern>
+
+    <!-- Soft Blur Filter -->
+    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="35" />
+    </filter>
+    <filter id="lightBlur" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="8" />
+    </filter>
+  </defs>
+
+  <!-- Deep Dark Base -->
+  <rect width="100%" height="100%" fill="url(#bgGrad)" />
+
+  <!-- Architectural Perspective Grid -->
+  <rect width="100%" height="100%" fill="url(#isoGrid)" />
+
+  <!-- Ambient Light Orbs with Blur -->
+  <g filter="url(#softBlur)">
+    <circle cx="280" cy="220" r="320" fill="url(#emeraldGlow)" />
+    <circle cx="1640" cy="280" r="380" fill="url(#skyGlow)" />
+    <circle cx="960" cy="540" r="450" fill="url(#indigoGlow)" />
+    <circle cx="450" cy="850" r="300" fill="url(#skyGlow)" />
+    <circle cx="1500" cy="800" r="340" fill="url(#emeraldGlow)" />
+  </g>
+
+  <!-- Background Layer: Distance Mountain Silhouette (Bohol / Rizal hills) -->
+  <path d="M0,780 Q 240,690 480,740 T 960,670 T 1440,730 T 1920,680 L 1920,1080 L 0,1080 Z" 
+        fill="#0e0f14" fill-opacity="0.7" />
+
+  <!-- Midground Skyline: Commercial & Industrial Hubs (Metro Manila & Cebu) -->
+  <g fill="url(#skylineGrad)">
+    <!-- Left Commercial Cluster -->
+    <rect x="60" y="580" width="55" height="420" rx="3" />
+    <rect x="125" y="520" width="80" height="480" rx="4" />
+    <polygon points="125,520 165,460 205,520" />
+    <line x1="165" y1="460" x2="165" y2="420" stroke="#3b82f6" stroke-width="2" stroke-opacity="0.6" />
+    <circle cx="165" cy="420" r="2.5" fill="#ef4444" />
+
+    <rect x="215" y="600" width="60" height="400" rx="3" />
+    <rect x="285" y="560" width="90" height="440" rx="3" />
+    <rect x="385" y="620" width="70" height="380" rx="2" />
+
+    <!-- Construction Crane (Growth & Infrastructure) -->
+    <path d="M 470,720 L 470,530 L 580,530 M 470,530 L 430,550 M 470,530 L 540,570" 
+          stroke="#475569" stroke-width="2" fill="none" stroke-opacity="0.5" />
+    <line x1="560" y1="530" x2="560" y2="600" stroke="#64748b" stroke-width="1.5" stroke-opacity="0.4" stroke-dasharray="3,3" />
+
+    <!-- Center Bridge & Arch Structure (Connectivity) -->
+    <path d="M 720,780 C 820,680 1100,680 1200,780 L 1200,820 L 720,820 Z" fill="#13141a" fill-opacity="0.8" />
+    <line x1="770" y1="780" x2="770" y2="720" stroke="#334155" stroke-width="1.5" stroke-opacity="0.4" />
+    <line x1="840" y1="780" x2="840" y2="695" stroke="#334155" stroke-width="1.5" stroke-opacity="0.4" />
+    <line x1="910" y1="780" x2="910" y2="685" stroke="#334155" stroke-width="1.5" stroke-opacity="0.4" />
+    <line x1="980" y1="780" x2="980" y2="685" stroke="#334155" stroke-width="1.5" stroke-opacity="0.4" />
+    <line x1="1050" y1="780" x2="1050" y2="695" stroke="#334155" stroke-width="1.5" stroke-opacity="0.4" />
+    <line x1="1120" y1="780" x2="1120" y2="730" stroke="#334155" stroke-width="1.5" stroke-opacity="0.4" />
+
+    <!-- Right Tech & Business Towers -->
+    <rect x="1460" y="590" width="75" height="410" rx="3" />
+    <rect x="1545" y="510" width="100" height="490" rx="4" />
+    <polygon points="1545,510 1595,430 1645,510" />
+    <line x1="1595" y1="430" x2="1595" y2="390" stroke="#10b981" stroke-width="2" stroke-opacity="0.6" />
+    <circle cx="1595" cy="390" r="2.5" fill="#10b981" />
+
+    <rect x="1655" y="550" width="85" height="450" rx="3" />
+    <rect x="1750" y="610" width="65" height="390" rx="3" />
+    <rect x="1825" y="570" width="80" height="430" rx="3" />
+  </g>
+
+  <!-- Foreground Atmospheric City Horizon Layer -->
+  <g fill="url(#frontSkylineGrad)">
+    <rect x="0" y="760" width="220" height="320" />
+    <rect x="250" y="720" width="180" height="360" rx="4" />
+    <rect x="520" y="750" width="140" height="330" rx="3" />
+    <rect x="1240" y="740" width="160" height="340" rx="4" />
+    <rect x="1430" y="710" width="200" height="370" rx="4" />
+    <rect x="1670" y="730" width="250" height="350" />
+  </g>
+
+  <!-- Illuminated Building Windows (Subtle warm/cyan grid lights) -->
+  <g fill="#fef08a" fill-opacity="0.25">
+    <circle cx="145" cy="560" r="1.5" />
+    <circle cx="165" cy="560" r="1.5" />
+    <circle cx="185" cy="560" r="1.5" />
+    <circle cx="145" cy="600" r="1.5" />
+    <circle cx="185" cy="600" r="1.5" />
+    <circle cx="165" cy="640" r="1.5" />
+    <circle cx="310" cy="610" r="1.5" />
+    <circle cx="330" cy="610" r="1.5" />
+    <circle cx="350" cy="610" r="1.5" />
+    <circle cx="330" cy="650" r="1.5" />
+    <circle cx="1575" cy="550" r="1.5" />
+    <circle cx="1615" cy="550" r="1.5" />
+    <circle cx="1595" cy="590" r="1.5" />
+    <circle cx="1575" cy="630" r="1.5" />
+    <circle cx="1615" cy="630" r="1.5" />
+  </g>
+
+  <!-- Constellation Job Connectivity Network across the Philippines -->
+  <g stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1.2" stroke-dasharray="4,6">
+    <line x1="260" y1="380" x2="520" y2="440" />
+    <line x1="520" y1="440" x2="820" y2="360" />
+    <line x1="820" y1="360" x2="1100" y2="410" />
+    <line x1="1100" y1="410" x2="1420" y2="350" />
+    <line x1="1420" y1="350" x2="1680" y2="420" />
+    <line x1="520" y1="440" x2="700" y2="580" />
+    <line x1="1100" y1="410" x2="1220" y2="560" />
+  </g>
+
+  <!-- Glowing Luminous Connection Nodes (Luzon, Visayas, Mindanao Job Hubs) -->
+  <g>
+    <!-- Manila Node -->
+    <circle cx="520" cy="440" r="7" fill="#10b981" fill-opacity="0.3" />
+    <circle cx="520" cy="440" r="3.5" fill="#34d399" />
+    
+    <!-- Cebu Node -->
+    <circle cx="820" cy="360" r="6" fill="#38bdf8" fill-opacity="0.3" />
+    <circle cx="820" cy="360" r="3" fill="#38bdf8" />
+
+    <!-- Bohol / Tagbilaran Node -->
+    <circle cx="1100" cy="410" r="7" fill="#6366f1" fill-opacity="0.3" />
+    <circle cx="1100" cy="410" r="3.5" fill="#818cf8" />
+
+    <!-- Davao Node -->
+    <circle cx="1420" cy="350" r="6" fill="#10b981" fill-opacity="0.3" />
+    <circle cx="1420" cy="350" r="3" fill="#34d399" />
+
+    <!-- Northern Luzon Node -->
+    <circle cx="260" cy="380" r="5" fill="#f59e0b" fill-opacity="0.3" />
+    <circle cx="260" cy="380" r="2.5" fill="#fbbf24" />
+
+    <!-- CDO / Mindanao Hub Node -->
+    <circle cx="1680" cy="420" r="6" fill="#38bdf8" fill-opacity="0.3" />
+    <circle cx="1680" cy="420" r="3" fill="#38bdf8" />
+  </g>
+
+  <!-- Soft Vignette & Blurry Backdrop Scrim (Ensures Texts Stand Out Razor Sharp) -->
+  <radialGradient id="vignetteMask" cx="50%" cy="45%" r="65%">
+    <stop offset="0%" stop-color="#09090b" stop-opacity="0.65" />
+    <stop offset="65%" stop-color="#09090b" stop-opacity="0.82" />
+    <stop offset="100%" stop-color="#09090b" stop-opacity="0.95" />
+  </radialGradient>
+  <rect width="100%" height="100%" fill="url(#vignetteMask)" />
+</svg>
+

@@ -135,4 +135,141 @@ class User extends Authenticatable
     {
         return $this->hasMany(Message::class, 'receiver_id');
     }
+
+    /**
+     * Get deterministic, URL-safe QR verification token for this user.
+     */
+    public function getQrTokenAttribute(): string
+    {
+        $sig = substr(hash_hmac('sha256', "findjobph_worker_{$this->id}", (string) config('app.key', 'findjobph_secret')), 0, 16);
+
+        return rtrim(strtr(base64_encode("{$this->id}:{$sig}"), '+/', '-_'), '=');
+    }
+
+    /**
+     * Locate a worker by their QR verification token.
+     */
+    public static function findByQrToken(?string $token): ?User
+    {
+        if (empty($token)) {
+            return null;
+        }
+
+        $decoded = base64_decode(strtr($token, '-_', '+/'));
+        if (! $decoded || ! str_contains($decoded, ':')) {
+            return null;
+        }
+
+        [$id, $sig] = explode(':', $decoded, 2);
+        $user = static::find($id);
+        if (! $user || ! $user->isWorker()) {
+            return null;
+        }
+
+        $expectedSig = substr(hash_hmac('sha256', "findjobph_worker_{$user->id}", (string) config('app.key', 'findjobph_secret')), 0, 16);
+        if (! hash_equals($expectedSig, $sig)) {
+            return null;
+        }
+
+        return $user;
+    }
+
+    /**
+     * Generate live QR profile data for worker status verification.
+     *
+     * @return array<string, mixed>
+     */
+    public function getQrProfileData(): array
+    {
+        $activeJob = $this->activeJobApplication();
+        $status = 'pending';
+        $workTitle = null;
+        $employerName = null;
+        $hiredAt = null;
+        $endedAt = null;
+        $terminationReason = null;
+
+        if ($activeJob && $activeJob->jobPost) {
+            $status = 'hired';
+            $workTitle = $activeJob->jobPost->title;
+            $employerName = $activeJob->jobPost->employer?->display_name;
+            $hiredAt = $activeJob->hired_at?->format('M d, Y') ?? $activeJob->created_at?->format('M d, Y');
+        } else {
+            // Find most recent fired record
+            $latestFired = $this->applications()
+                ->where('status', 'fired')
+                ->latest('ended_at')
+                ->latest('updated_at')
+                ->with(['jobPost.employer'])
+                ->first();
+
+            $latestResigned = $this->applications()
+                ->where('status', 'resigned')
+                ->latest('ended_at')
+                ->latest('updated_at')
+                ->first();
+
+            if ($latestFired && (! $latestResigned || $latestFired->updated_at >= $latestResigned->updated_at)) {
+                $status = 'fired';
+                $workTitle = $latestFired->jobPost?->title;
+                $employerName = $latestFired->jobPost?->employer?->display_name;
+                $endedAt = $latestFired->ended_at?->format('M d, Y') ?? $latestFired->updated_at?->format('M d, Y');
+                $terminationReason = $latestFired->termination_reason;
+            } else {
+                $status = 'pending';
+                $workTitle = null;
+                $employerName = null;
+            }
+        }
+
+        return [
+            'worker_id' => $this->id,
+            'name' => $this->display_name,
+            'first_name' => $this->first_name,
+            'middle_name' => $this->middle_name,
+            'last_name' => $this->last_name,
+            'email' => $this->email,
+            'contact_number' => $this->contact_number,
+            'sex' => $this->sex,
+            'address' => $this->address,
+            'status' => $status,
+            'status_label' => match ($status) {
+                'hired' => 'Hired',
+                'fired' => 'Fired',
+                default => 'Pending',
+            },
+            'work_title' => $status === 'pending' ? null : $workTitle,
+            'employer_name' => $status === 'pending' ? null : $employerName,
+            'hired_at' => $hiredAt,
+            'ended_at' => $endedAt,
+            'termination_reason' => $terminationReason,
+            'qr_token' => $this->qr_token,
+            'verify_url' => route('worker.qr.verify', ['token' => $this->qr_token]),
+        ];
+    }
+
+    /**
+     * Get JSON string encoded directly into the worker's QR code.
+     */
+    public function getQrPayloadString(): string
+    {
+        $data = $this->getQrProfileData();
+
+        $payload = [
+            'system' => 'Findjobph Worker Pass',
+            'worker_id' => $data['worker_id'],
+            'name' => $data['name'],
+            'status' => $data['status'],
+            'contact' => $data['contact_number'],
+            'verify_url' => $data['verify_url'],
+            'token' => $data['qr_token'],
+        ];
+
+        if ($data['status'] !== 'pending') {
+            $payload['work'] = $data['work_title'];
+            $payload['employer'] = $data['employer_name'];
+        }
+
+        return json_encode($payload, JSON_UNESCAPED_SLASHES);
+    }
 }

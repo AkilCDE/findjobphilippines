@@ -878,4 +878,491 @@ class JobPortalTest extends TestCase
             'address' => 'Brgy. Cogon, Tagbilaran City, Bohol',
         ]);
     }
+
+    public function test_landing_page_renders_with_enlarged_browse_button_and_tutorial(): void
+    {
+        $employer = User::factory()->create(['role' => 'employer']);
+        JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Senior Welder Specialist',
+            'category' => 'Construction & Skilled Trades',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱900 / day',
+            'workers_needed' => 3,
+            'workers_hired' => 1,
+            'location_address' => 'Tagbilaran City, Bohol',
+            'latitude' => 9.6444,
+            'longitude' => 123.8566,
+            'status' => 'open',
+            'requirements' => 'TESDA SMAW NC II',
+            'description' => 'Heavy structural welding.',
+        ]);
+
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('Browse All Jobs');
+        $response->assertSee('How to Use Findjobph');
+        $response->assertSee('For Job Seekers (Workers)');
+        $response->assertSee('For Direct Employers');
+        $response->assertSee('View Interactive Philippine Map');
+    }
+
+    public function test_guest_cannot_apply_for_job_and_must_sign_in(): void
+    {
+        $employer = User::factory()->create(['role' => 'employer']);
+        $job = JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Master Carpenter Needed',
+            'category' => 'Construction & Skilled Trades',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱850 / day',
+            'workers_needed' => 2,
+            'workers_hired' => 0,
+            'location_address' => 'Cebu City, Cebu',
+            'latitude' => 10.3157,
+            'longitude' => 123.8854,
+            'status' => 'open',
+            'requirements' => 'Woodworking experience',
+            'description' => 'Custom furniture fabrication.',
+        ]);
+
+        // Jobs page shows the post with guest sign-in reminder
+        $jobsResponse = $this->get('/jobs');
+        $jobsResponse->assertStatus(200);
+        $jobsResponse->assertSee('Master Carpenter Needed');
+        $jobsResponse->assertSee('Sign in to Apply');
+
+        // Job details page indicates guest authentication required
+        $showResponse = $this->get("/jobs/{$job->id}");
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('Sign In to Apply for this Job');
+        $showResponse->assertSee('Create Worker Account');
+        $showResponse->assertDontSee('Submit Application with Verified Selfie');
+
+        // Attempting to apply as an unauthenticated guest redirects to login
+        $applyResponse = $this->post("/jobs/{$job->id}/apply", [
+            'submitted_requirements' => 'Here are my valid credentials.',
+        ]);
+        $applyResponse->assertRedirect('/login');
+    }
+
+    public function test_admin_dashboard_renders_monochrome_dark_mode_and_interactive_charts(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($admin)->get('/admin/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee('Admin Dashboard');
+        $response->assertSee('mainActivityChart');
+        $response->assertSee('userDonutChart');
+        $response->assertSee('categoriesChart');
+        $response->assertSee('applicationStatusChart');
+        $response->assertSee('switchActivityMode');
+
+        $postsResponse = $this->actingAs($admin)->get('/admin/posts');
+        $postsResponse->assertStatus(200);
+        $postsResponse->assertSee('Manage Job Postings');
+    }
+
+    public function test_all_pages_render_dark_mode_and_favicon_logo(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $worker = User::factory()->create(['role' => 'worker']);
+        $employer = User::factory()->create(['role' => 'employer']);
+
+        // 1. Landing page is in dark mode and uses favicon logo
+        $homeResponse = $this->get('/');
+        $homeResponse->assertStatus(200);
+        $homeResponse->assertSee('favicon.svg');
+        $homeResponse->assertSee('bg-[#09090b]');
+
+        // 2. Browse jobs page is in dark mode
+        $jobsResponse = $this->get('/jobs');
+        $jobsResponse->assertStatus(200);
+        $jobsResponse->assertSee('bg-[#09090b]');
+        $jobsResponse->assertSee('bg-[#121215]');
+
+        // 3. Map view uses CartoDB Dark Matter tiles
+        $mapResponse = $this->get('/jobs/map');
+        $mapResponse->assertStatus(200);
+        $mapResponse->assertSee('basemaps.cartocdn.com/dark_all');
+        $mapResponse->assertSee('bg-[#09090b]');
+
+        // 4. Direct Messages page is in dark mode
+        $messagesResponse = $this->actingAs($worker)->get('/messages?user_id='.$employer->id);
+        $messagesResponse->assertStatus(200);
+        $messagesResponse->assertSee('bg-[#121215]');
+        $messagesResponse->assertSee('bg-[#18181b]');
+
+        // 5. Admin portal displays circular favicon logo in sidebar
+        $adminResponse = $this->actingAs($admin)->get('/admin/dashboard');
+        $adminResponse->assertStatus(200);
+        $adminResponse->assertSee('favicon.svg');
+        $adminResponse->assertSee('Admin Portal');
+    }
+
+    public function test_worker_auto_generates_qr_code_with_pending_status_hiding_work_and_employer(): void
+    {
+        $worker = User::factory()->create([
+            'role' => 'worker',
+            'first_name' => 'Pedro',
+            'last_name' => 'Penduko',
+            'email' => 'pedro@example.com',
+            'contact_number' => '09181234567',
+            'sex' => 'Male',
+            'address' => 'Tagbilaran City, Bohol',
+        ]);
+
+        $profileData = $worker->getQrProfileData();
+        $this->assertEquals('pending', $profileData['status']);
+        $this->assertNull($profileData['work_title']);
+        $this->assertNull($profileData['employer_name']);
+
+        // Check Applications page displays cleanly without the moved QR card
+        $response = $this->actingAs($worker)->get('/worker/applications');
+        $response->assertStatus(200);
+        $response->assertDontSee('workerAppQrCode');
+
+        // Check Profile page displays the worker QR code and pending status
+        $profileResponse = $this->actingAs($worker)->get('/profile');
+        $profileResponse->assertStatus(200);
+        $profileResponse->assertSee('profileWorkerQr');
+        $profileResponse->assertSee('Pending');
+
+        // Check Digital ID pass page
+        $passResponse = $this->actingAs($worker)->get('/worker/qr-pass');
+        $passResponse->assertStatus(200);
+        $passResponse->assertSee('Official Worker Digital ID Pass');
+        $passResponse->assertSee('Pedro Penduko');
+        $passResponse->assertSee('Pending');
+        $passResponse->assertSee('fullPassQr');
+
+        // Check public verify route
+        $verifyResponse = $this->get('/qr/verify/'.$worker->qr_token);
+        $verifyResponse->assertStatus(200);
+        $verifyResponse->assertSee('Pedro Penduko');
+        $verifyResponse->assertSee('Seeking Employment');
+        $verifyResponse->assertDontSee('Active Work Position:');
+    }
+
+    public function test_worker_qr_code_updates_to_hired_displaying_work_title_and_employer_name(): void
+    {
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'company_name' => 'Super Mega Builders Corp',
+        ]);
+        $worker = User::factory()->create(['role' => 'worker', 'first_name' => 'Maria', 'last_name' => 'Clara']);
+
+        $job = JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Lead Electrical Engineer',
+            'category' => 'Engineering',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱45,000 / month',
+            'workers_needed' => 2,
+            'workers_hired' => 1,
+            'location_address' => 'Cebu City',
+            'latitude' => 10.3157,
+            'longitude' => 123.8854,
+            'description' => 'Oversee electrical engineering tasks and infrastructure maintenance.',
+            'requirements' => 'PRC License, Valid ID',
+            'status' => 'open',
+        ]);
+
+        $app = JobApplication::create([
+            'job_post_id' => $job->id,
+            'worker_id' => $worker->id,
+            'status' => 'hired',
+            'submitted_requirements' => 'PRC License, Valid ID',
+            'hired_at' => now(),
+        ]);
+
+        $profileData = $worker->getQrProfileData();
+        $this->assertEquals('hired', $profileData['status']);
+        $this->assertEquals('Lead Electrical Engineer', $profileData['work_title']);
+        $this->assertEquals('Super Mega Builders Corp', $profileData['employer_name']);
+
+        $verifyResponse = $this->get('/qr/verify/'.$worker->qr_token);
+        $verifyResponse->assertStatus(200);
+        $verifyResponse->assertSee('Hired');
+        $verifyResponse->assertSee('Lead Electrical Engineer');
+        $verifyResponse->assertSee('Super Mega Builders Corp');
+    }
+
+    public function test_worker_qr_code_updates_to_fired_displaying_work_title_and_employer_name(): void
+    {
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'company_name' => 'Global Logistics Inc',
+        ]);
+        $worker = User::factory()->create(['role' => 'worker', 'first_name' => 'Crisostomo', 'last_name' => 'Ibarra']);
+
+        $job = JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Warehouse Supervisor',
+            'category' => 'Logistics',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱25,000 / month',
+            'workers_needed' => 1,
+            'workers_hired' => 0,
+            'location_address' => 'Manila, Philippines',
+            'latitude' => 14.5995,
+            'longitude' => 120.9842,
+            'description' => 'Manage inventory, safety, and team schedules in main warehouse.',
+            'requirements' => 'Resume, Clearance',
+            'status' => 'open',
+        ]);
+
+        JobApplication::create([
+            'job_post_id' => $job->id,
+            'worker_id' => $worker->id,
+            'status' => 'fired',
+            'submitted_requirements' => 'Resume, Clearance',
+            'hired_at' => now()->subMonths(3),
+            'ended_at' => now(),
+            'termination_reason' => 'Attendance policy violation',
+        ]);
+
+        $profileData = $worker->getQrProfileData();
+        $this->assertEquals('fired', $profileData['status']);
+        $this->assertEquals('Warehouse Supervisor', $profileData['work_title']);
+        $this->assertEquals('Global Logistics Inc', $profileData['employer_name']);
+        $this->assertEquals('Attendance policy violation', $profileData['termination_reason']);
+
+        $verifyResponse = $this->get('/qr/verify/'.$worker->qr_token);
+        $verifyResponse->assertStatus(200);
+        $verifyResponse->assertSee('Fired');
+        $verifyResponse->assertSee('Warehouse Supervisor');
+        $verifyResponse->assertSee('Global Logistics Inc');
+        $verifyResponse->assertSee('Attendance policy violation');
+    }
+
+    public function test_employer_can_scan_worker_qr_code_and_receives_live_details(): void
+    {
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'company_name' => 'Tech Horizons',
+        ]);
+        $otherEmployer = User::factory()->create([
+            'role' => 'employer',
+            'company_name' => 'First Employer Inc',
+        ]);
+        $worker = User::factory()->create([
+            'role' => 'worker',
+            'first_name' => 'Elias',
+            'last_name' => 'Salome',
+            'email' => 'elias@example.com',
+            'contact_number' => '09998887777',
+        ]);
+
+        // 1. Initial pending state scan
+        $scanResponse = $this->actingAs($employer)->postJson('/employer/scan-worker-qr', [
+            'code' => $worker->qr_token,
+        ]);
+
+        $scanResponse->assertStatus(200);
+        $scanResponse->assertJson([
+            'success' => true,
+            'worker' => [
+                'worker_id' => $worker->id,
+                'name' => 'Elias Salome',
+                'status' => 'pending',
+                'work_title' => null,
+                'employer_name' => null,
+            ],
+        ]);
+
+        // 2. Worker gets hired
+        $job = JobPost::create([
+            'employer_id' => $otherEmployer->id,
+            'title' => 'Heavy Equipment Mechanic',
+            'category' => 'Maintenance',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱30,000 / month',
+            'workers_needed' => 2,
+            'workers_hired' => 1,
+            'location_address' => 'Davao City',
+            'latitude' => 7.1907,
+            'longitude' => 125.4553,
+            'description' => 'Perform diagnostics, preventative repairs, and maintenance on hydraulics.',
+            'requirements' => 'TESDA NC II',
+            'status' => 'open',
+        ]);
+        $app = JobApplication::create([
+            'job_post_id' => $job->id,
+            'worker_id' => $worker->id,
+            'status' => 'hired',
+            'submitted_requirements' => 'TESDA NC II',
+            'hired_at' => now(),
+        ]);
+
+        // The EXACT same QR code is scanned again, and it automatically reflects 'hired'!
+        $scanResponse2 = $this->actingAs($employer)->postJson('/employer/scan-worker-qr', [
+            'code' => $worker->qr_token,
+        ]);
+
+        $scanResponse2->assertStatus(200);
+        $scanResponse2->assertJson([
+            'success' => true,
+            'worker' => [
+                'worker_id' => $worker->id,
+                'status' => 'hired',
+                'work_title' => 'Heavy Equipment Mechanic',
+                'employer_name' => 'First Employer Inc',
+            ],
+        ]);
+
+        // 3. Worker gets fired
+        $app->update([
+            'status' => 'fired',
+            'ended_at' => now(),
+            'termination_reason' => 'Repeated unexcused absences',
+        ]);
+
+        // The EXACT same QR code is scanned again, and it automatically reflects 'fired'!
+        $scanResponse3 = $this->actingAs($employer)->postJson('/employer/scan-worker-qr', [
+            'code' => $worker->qr_token,
+        ]);
+
+        $scanResponse3->assertStatus(200);
+        $scanResponse3->assertJson([
+            'success' => true,
+            'worker' => [
+                'worker_id' => $worker->id,
+                'status' => 'fired',
+                'work_title' => 'Heavy Equipment Mechanic',
+                'employer_name' => 'First Employer Inc',
+                'termination_reason' => 'Repeated unexcused absences',
+            ],
+        ]);
+
+        // 4. Test employer scanner page loads with all controls
+        $scannerPageResponse = $this->actingAs($employer)->get('/employer/scanner');
+        $scannerPageResponse->assertStatus(200);
+        $scannerPageResponse->assertSee('Worker QR Scanner');
+        $scannerPageResponse->assertSee('employerQrReader');
+        $scannerPageResponse->assertSee('workerScanPopUpModal');
+    }
+
+    public function test_guest_cannot_view_profile(): void
+    {
+        $response = $this->get('/profile');
+        $response->assertRedirect('/login');
+    }
+
+    public function test_worker_can_view_profile_with_personal_info_and_live_qr_code(): void
+    {
+        $worker = User::factory()->create([
+            'role' => 'worker',
+            'first_name' => 'Juan',
+            'last_name' => 'Dela Cruz',
+            'sex' => 'Male',
+            'contact_number' => '09123456789',
+            'address' => 'Barangay Poblacion, Tagbilaran City, Bohol',
+            'email' => 'juan.worker@example.com',
+        ]);
+
+        $response = $this->actingAs($worker)->get('/profile');
+        $response->assertStatus(200);
+        $response->assertSee('Juan Dela Cruz');
+        $response->assertSee('09123456789');
+        $response->assertSee('Barangay Poblacion');
+        $response->assertSee('Tagbilaran City');
+        $response->assertSee('Bohol');
+        $response->assertSee('Worker Pass');
+        $response->assertSee('profileWorkerQr');
+        $response->assertSee('Edit Profile Information');
+    }
+
+    public function test_worker_can_update_profile_information(): void
+    {
+        $worker = User::factory()->create([
+            'role' => 'worker',
+            'first_name' => 'Pedro',
+            'last_name' => 'Santos',
+            'sex' => 'Male',
+            'contact_number' => '09111111111',
+            'address' => 'Old Brgy, Old City, Old Province',
+        ]);
+
+        $response = $this->actingAs($worker)->put('/profile', [
+            'first_name' => 'Pedro Updated',
+            'middle_name' => 'Garcia',
+            'last_name' => 'Santos Jr',
+            'sex' => 'Male',
+            'contact_number' => '09998887777',
+            'address_brgy' => 'Brgy. San Jose',
+            'address_city' => 'Catigbian',
+            'address_province' => 'Bohol',
+        ]);
+
+        $response->assertRedirect(route('profile.show'));
+        $response->assertSessionHas('success');
+
+        $worker->refresh();
+        $this->assertSame('Pedro Updated', $worker->first_name);
+        $this->assertSame('Garcia', $worker->middle_name);
+        $this->assertSame('Santos Jr', $worker->last_name);
+        $this->assertSame('09998887777', $worker->contact_number);
+        $this->assertSame('Brgy. San Jose, Catigbian, Bohol', $worker->address);
+    }
+
+    public function test_employer_can_view_profile_with_company_info_and_no_qr_code(): void
+    {
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'company_name' => 'Bohol Builders Hub',
+            'first_name' => 'Maria',
+            'last_name' => 'Lim',
+            'sex' => 'Female',
+            'contact_number' => '09887766554',
+            'address' => 'Brgy. Central, Tubigon, Bohol',
+            'email' => 'maria.lim@builders.ph',
+        ]);
+
+        $response = $this->actingAs($employer)->get('/profile');
+        $response->assertStatus(200);
+        $response->assertSee('Bohol Builders Hub');
+        $response->assertSee('Maria');
+        $response->assertSee('Lim');
+        $response->assertSee('09887766554');
+        $response->assertSee('Employer Profile');
+        // Crucial requirement: employer profile should NOT have the worker QR pass
+        $response->assertDontSee('profileWorkerQr');
+        $response->assertDontSee('Worker Pass');
+    }
+
+    public function test_employer_can_update_company_profile(): void
+    {
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'company_name' => 'Old Enterprise',
+            'first_name' => 'Carlos',
+            'last_name' => 'Reyes',
+            'sex' => 'Male',
+            'contact_number' => '09223344556',
+            'address' => 'Old Brgy, Old City, Old Province',
+        ]);
+
+        $response = $this->actingAs($employer)->put('/profile', [
+            'company_name' => 'New Apex Construction Corp',
+            'first_name' => 'Carlos',
+            'middle_name' => 'Tan',
+            'last_name' => 'Reyes',
+            'sex' => 'Male',
+            'contact_number' => '09334455667',
+            'address_brgy' => 'Brgy. Manga',
+            'address_city' => 'Tagbilaran City',
+            'address_province' => 'Bohol',
+        ]);
+
+        $response->assertRedirect(route('profile.show'));
+        $response->assertSessionHas('success');
+
+        $employer->refresh();
+        $this->assertSame('New Apex Construction Corp', $employer->company_name);
+        $this->assertSame('Carlos', $employer->first_name);
+        $this->assertSame('09334455667', $employer->contact_number);
+        $this->assertSame('Brgy. Manga, Tagbilaran City, Bohol', $employer->address);
+    }
 }

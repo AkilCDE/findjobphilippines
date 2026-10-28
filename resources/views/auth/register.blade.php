@@ -1,29 +1,40 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-xl mx-auto py-8">
-    <div class="glass-panel p-8 sm:p-10 rounded-3xl shadow-xl border border-white/80">
+<div class="relative max-w-xl mx-auto py-6 sm:py-10 text-zinc-100">
+
+    <!-- Atmospheric Fullscreen Background Picture -->
+    <div class="fixed inset-0 z-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+        <img src="{{ asset('images/auth-bg.jpg') }}" alt="FindJobPH Auth Background" class="w-full h-full object-cover object-center filter blur-[2px] brightness-[0.35] contrast-[1.15] scale-105">
+        <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-[#09090b]/60 to-[#09090b]/90"></div>
+    </div>
+
+    <!-- Worker & Employer Characters Holding the Container & Waving Hands -->
+    @include('auth.partials.holding-characters')
+
+    <!-- Sign Up Container (Held by Characters) -->
+    <div class="relative z-10 p-7 sm:p-10 rounded-3xl shadow-2xl bg-[#121215] border-2 border-zinc-800 backdrop-blur-md">
         
         <!-- Header -->
         <div class="text-center mb-6">
-            <h1 class="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
                 {{ !empty($googleEmail) ? 'Complete Account Setup' : 'Create Account' }}
             </h1>
-            <p class="text-xs font-semibold text-slate-600 mt-1">
+            <p class="text-xs font-medium text-zinc-400 mt-1">
                 {{ !empty($googleEmail) ? 'Set up your password, names, and details to finish your Google registration' : 'Choose your account type to get started' }}
             </p>
         </div>
 
         <!-- Server-side Validation Error Banner -->
         @if ($errors->any())
-            <div class="mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 shadow-sm animate-in fade-in duration-200">
-                <div class="flex items-center gap-2 font-black text-xs text-rose-700">
-                    <svg class="w-4 h-4 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="mb-5 p-4 rounded-2xl bg-red-950/80 border border-red-700 text-red-200 shadow-lg animate-in fade-in duration-200">
+                <div class="flex items-center gap-2 font-black text-xs text-red-300">
+                    <svg class="w-4 h-4 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
                     <span>Please correct the following errors:</span>
                 </div>
-                <ul class="list-disc list-inside space-y-1 pl-1 text-[11px] font-semibold text-rose-700 mt-2">
+                <ul class="list-disc list-inside space-y-1 pl-1 text-[11px] font-semibold text-red-200 mt-2">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -32,22 +43,22 @@
         @endif
 
         <!-- Client-side Floating Trapping Alert -->
-        <div id="clientErrorBanner" class="hidden mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-900 shadow-sm animate-in fade-in duration-200">
+        <div id="clientErrorBanner" class="hidden mb-5 p-4 rounded-2xl bg-red-950/80 border border-red-700 text-red-200 shadow-lg animate-in fade-in duration-200">
             <div class="flex items-start gap-2.5">
-                <svg class="w-4 h-4 shrink-0 text-rose-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-4 h-4 shrink-0 text-red-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div class="flex-1 text-xs">
-                    <p class="font-black text-rose-900" id="clientErrorTitle">Action Required</p>
-                    <p class="font-semibold text-rose-700 mt-0.5" id="clientErrorMessage"></p>
+                    <p class="font-black text-red-300" id="clientErrorTitle">Action Required</p>
+                    <p class="font-semibold text-red-200 mt-0.5" id="clientErrorMessage"></p>
                 </div>
             </div>
         </div>
 
         <!-- Google Connected Banner (if continuing with Google) -->
         @if(!empty($googleEmail))
-            <div class="mb-6 p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-start gap-3 shadow-xs">
-                <div class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+            <div class="mb-6 p-4 rounded-2xl bg-sky-950/80 border border-sky-800 flex items-start gap-3 shadow-md">
+                <div class="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-700 shadow-sm flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -56,10 +67,10 @@
                     </svg>
                 </div>
                 <div class="flex-1 text-xs">
-                    <p class="font-black text-slate-950">
-                        Continuing with Google: <span class="text-sky-700 font-bold underline">{{ $googleEmail }}</span>
+                    <p class="font-black text-white">
+                        Continuing with Google: <span class="text-sky-400 font-bold underline">{{ $googleEmail }}</span>
                     </p>
-                    <p class="font-semibold text-slate-600 mt-0.5">
+                    <p class="font-semibold text-zinc-300 mt-0.5">
                         You must set up your password, names, and contact details below before accessing your account.
                     </p>
                 </div>
@@ -81,13 +92,13 @@
         @endphp
 
         <!-- Role Selector Switch (Worker vs Employer) -->
-        <div class="mb-6 p-1 rounded-2xl bg-slate-100 border border-slate-200/80 flex items-center gap-1">
+        <div class="mb-6 p-1 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center gap-1">
             <button type="button" id="roleBtnWorker" onclick="switchRole('worker')"
-                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 {{ $currentRole === 'worker' ? 'shadow-sm bg-white text-slate-950 border border-slate-200' : 'text-slate-600 hover:text-slate-950' }}">
+                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 {{ $currentRole === 'worker' ? 'shadow-sm bg-white text-black' : 'text-zinc-400 hover:text-white' }}">
                 Worker
             </button>
             <button type="button" id="roleBtnEmployer" onclick="switchRole('employer')"
-                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 {{ $currentRole === 'employer' ? 'shadow-sm bg-white text-slate-950 border border-slate-200' : 'text-slate-600 hover:text-slate-950' }}">
+                class="flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 {{ $currentRole === 'employer' ? 'shadow-sm bg-white text-black' : 'text-zinc-400 hover:text-white' }}">
                 Employer
             </button>
         </div>
@@ -99,135 +110,135 @@
 
             <!-- WORKER SPECIFIC FIELDS -->
             <div id="workerFields" class="space-y-4 {{ $currentRole === 'employer' ? 'hidden' : '' }}">
-                <p class="text-xs font-black uppercase tracking-wider text-slate-800">
+                <p class="text-xs font-black uppercase tracking-wider text-white border-b border-zinc-800 pb-2">
                     Worker Personal Information
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label for="worker_first_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                            First Name <span class="text-red-500">*</span>
+                        <label for="worker_first_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                            First Name <span class="text-red-400">*</span>
                         </label>
                         <input type="text" name="first_name" id="worker_first_name" value="{{ old('first_name', $prefillFirst) }}"
                             placeholder="First Name"
-                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('first_name') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('first_name') border-rose-500 @enderror">
                         @error('first_name')
-                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                            <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label for="worker_middle_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
+                        <label for="worker_middle_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
                             Middle Name
                         </label>
                         <input type="text" name="middle_name" id="worker_middle_name" value="{{ old('middle_name') }}"
                             placeholder="Middle Name"
-                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('middle_name') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('middle_name') border-rose-500 @enderror">
                         @error('middle_name')
-                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                            <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label for="worker_last_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                            Last Name <span class="text-red-500">*</span>
+                        <label for="worker_last_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                            Last Name <span class="text-red-400">*</span>
                         </label>
                         <input type="text" name="last_name" id="worker_last_name" value="{{ old('last_name', $prefillLast) }}"
                             placeholder="Last Name"
-                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('last_name') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('last_name') border-rose-500 @enderror">
                         @error('last_name')
-                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                            <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
 
                 <!-- Worker Sex Selection -->
                 <div>
-                    <label for="worker_sex" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                        Sex <span class="text-red-500">*</span>
+                    <label for="worker_sex" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                        Sex <span class="text-red-400">*</span>
                     </label>
-                    <select name="sex" id="worker_sex" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('sex') border-rose-400 bg-rose-50/30 @enderror">
-                        <option value="">-- Select Sex --</option>
-                        <option value="Male" {{ old('sex') == 'Male' ? 'selected' : '' }}>Male</option>
-                        <option value="Female" {{ old('sex') == 'Female' ? 'selected' : '' }}>Female</option>
-                        <option value="Other" {{ old('sex') == 'Other' ? 'selected' : '' }}>Other</option>
-                        <option value="Prefer not to say" {{ old('sex') == 'Prefer not to say' ? 'selected' : '' }}>Prefer not to say</option>
+                    <select name="sex" id="worker_sex" class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white text-sm font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('sex') border-rose-500 @enderror">
+                        <option value="" class="bg-zinc-900 text-zinc-300">-- Select Sex --</option>
+                        <option value="Male" class="bg-zinc-900 text-white" {{ old('sex') == 'Male' ? 'selected' : '' }}>Male</option>
+                        <option value="Female" class="bg-zinc-900 text-white" {{ old('sex') == 'Female' ? 'selected' : '' }}>Female</option>
+                        <option value="Other" class="bg-zinc-900 text-white" {{ old('sex') == 'Other' ? 'selected' : '' }}>Other</option>
+                        <option value="Prefer not to say" class="bg-zinc-900 text-white" {{ old('sex') == 'Prefer not to say' ? 'selected' : '' }}>Prefer not to say</option>
                     </select>
                     @error('sex')
-                        <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
 
             <!-- EMPLOYER SPECIFIC FIELDS -->
             <div id="employerFields" class="space-y-4 {{ $currentRole === 'employer' ? '' : 'hidden' }}">
-                <p class="text-xs font-black uppercase tracking-wider text-slate-800">
+                <p class="text-xs font-black uppercase tracking-wider text-white border-b border-zinc-800 pb-2">
                     Employer Personal Information
                 </p>
 
-                <!-- Employer Name, Middle Name, Last Name (Requested Textfields) -->
+                <!-- Employer Name, Middle Name, Last Name -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label for="employer_first_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                            First Name <span class="text-red-500">*</span>
+                        <label for="employer_first_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                            First Name <span class="text-red-400">*</span>
                         </label>
                         <input type="text" name="first_name" id="employer_first_name" value="{{ old('first_name', $prefillFirst) }}"
                             placeholder="First Name"
-                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('first_name') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('first_name') border-rose-500 @enderror">
                         @error('first_name')
-                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                            <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
-                        <label for="employer_middle_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                            Middle Name <span class="text-red-500">*</span>
+                        <label for="employer_middle_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                            Middle Name <span class="text-red-400">*</span>
                         </label>
                         <input type="text" name="middle_name" id="employer_middle_name" value="{{ old('middle_name') }}"
                             placeholder="Middle Name"
-                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('middle_name') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('middle_name') border-rose-500 @enderror">
                         @error('middle_name')
-                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                            <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
-                        <label for="employer_last_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                            Last Name <span class="text-red-500">*</span>
+                        <label for="employer_last_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                            Last Name <span class="text-red-400">*</span>
                         </label>
                         <input type="text" name="last_name" id="employer_last_name" value="{{ old('last_name', $prefillLast) }}"
                             placeholder="Last Name"
-                            class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-semibold @error('last_name') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('last_name') border-rose-500 @enderror">
                         @error('last_name')
-                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                            <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="company_name" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                            Company / Business Name <span class="text-slate-400 font-normal">(Optional)</span>
+                        <label for="company_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                            Company / Business Name <span class="text-zinc-400 font-normal">(Optional)</span>
                         </label>
                         <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $googleName ?? '') }}"
                             placeholder="e.g. Catigbian Agro Builders"
-                            class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('company_name') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-sm font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('company_name') border-rose-500 @enderror">
                         @error('company_name')
-                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                            <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <!-- Employer Sex Selection -->
                     <div>
-                        <label for="employer_sex" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                            Sex <span class="text-red-500">*</span>
+                        <label for="employer_sex" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                            Sex <span class="text-red-400">*</span>
                         </label>
-                        <select name="employer_sex" id="employer_sex" class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('sex') border-rose-400 bg-rose-50/30 @enderror">
-                            <option value="">-- Select Sex --</option>
-                            <option value="Male" {{ old('sex') == 'Male' ? 'selected' : '' }}>Male</option>
-                            <option value="Female" {{ old('sex') == 'Female' ? 'selected' : '' }}>Female</option>
-                            <option value="Other" {{ old('sex') == 'Other' ? 'selected' : '' }}>Other</option>
-                            <option value="Prefer not to say" {{ old('sex') == 'Prefer not to say' ? 'selected' : '' }}>Prefer not to say</option>
+                        <select name="employer_sex" id="employer_sex" class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white text-sm font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('sex') border-rose-500 @enderror">
+                            <option value="" class="bg-zinc-900 text-zinc-300">-- Select Sex --</option>
+                            <option value="Male" class="bg-zinc-900 text-white" {{ old('sex') == 'Male' ? 'selected' : '' }}>Male</option>
+                            <option value="Female" class="bg-zinc-900 text-white" {{ old('sex') == 'Female' ? 'selected' : '' }}>Female</option>
+                            <option value="Other" class="bg-zinc-900 text-white" {{ old('sex') == 'Other' ? 'selected' : '' }}>Other</option>
+                            <option value="Prefer not to say" class="bg-zinc-900 text-white" {{ old('sex') == 'Prefer not to say' ? 'selected' : '' }}>Prefer not to say</option>
                         </select>
                         @error('sex')
-                            <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                            <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
@@ -236,17 +247,17 @@
             <!-- COMMON FIELDS (Required for Both) -->
             <!-- Email Field (Unique Trapping) -->
             <div>
-                <div class="flex items-center justify-between mb-1">
-                    <label for="reg_email" class="block text-xs font-bold uppercase tracking-wider text-slate-900">
-                        Email Address <span class="text-red-500">*</span>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="reg_email" class="block text-xs font-extrabold uppercase tracking-wider text-white">
+                        Email Address <span class="text-red-400">*</span>
                     </label>
-                    <span class="text-[10px] font-bold text-slate-400">Must be unique</span>
+                    <span class="text-[10px] font-bold text-zinc-400">Must be unique</span>
                 </div>
                 <input type="email" name="email" id="reg_email" value="{{ old('email', $googleEmail ?? '') }}" required
                     placeholder="email@example.com"
-                    class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('email') border-rose-400 bg-rose-50/30 @enderror">
+                    class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-sm font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('email') border-rose-500 @enderror">
                 @error('email')
-                    <div class="mt-1.5 flex items-center gap-1.5 text-xs text-rose-600 font-bold">
+                    <div class="mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 font-bold">
                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         <span>{{ $message }}</span>
                     </div>
@@ -255,60 +266,60 @@
 
             <!-- Mobile Number (11-Digit PH Trapping) -->
             <div>
-                <div class="flex items-center justify-between mb-1">
-                    <label for="contact_number" class="block text-xs font-bold uppercase tracking-wider text-slate-900">
-                        Mobile Number (11 Digits PH) <span class="text-red-500">*</span>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="contact_number" class="block text-xs font-extrabold uppercase tracking-wider text-white">
+                        Mobile Number (11 Digits PH) <span class="text-red-400">*</span>
                     </label>
-                    <span id="contactStatusBadge" class="text-[11px] font-extrabold text-slate-400">
+                    <span id="contactStatusBadge" class="text-[11px] font-bold text-zinc-400">
                         Format: 09XXXXXXXXX
                     </span>
                 </div>
                 <div class="relative">
                     <input type="tel" name="contact_number" id="contact_number" value="{{ old('contact_number') }}" required
                         maxlength="11" placeholder="09123456789"
-                        class="w-full px-4 py-2.5 rounded-xl glass-input text-sm font-semibold @error('contact_number') border-rose-400 bg-rose-50/30 @enderror">
-                    <div id="contactValidBadge" class="hidden absolute right-3 top-2.5 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
+                        class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-sm font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('contact_number') border-rose-500 @enderror">
+                    <div id="contactValidBadge" class="hidden absolute right-3 top-2.5 px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-700 text-[10px] font-extrabold">
                         ✓ Valid 11 Digits
                     </div>
                 </div>
                 @error('contact_number')
-                    <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                    <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Full Address Format: Barangay, Municipality/City, Province -->
             <div class="space-y-2 pt-1">
                 <div class="flex items-center justify-between">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-900">
-                        Full Address Format <span class="text-red-500">*</span>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-white">
+                        Full Address Format <span class="text-red-400">*</span>
                     </label>
-                    <span class="text-[10px] font-bold text-slate-500">Brgy, Municipality/City, Province</span>
+                    <span class="text-[10px] font-bold text-zinc-400">Brgy, Municipality/City, Province</span>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div>
-                        <label for="address_brgy" class="block text-[11px] font-bold text-slate-700 mb-1">
-                            Barangay <span class="text-red-500">*</span>
+                        <label for="address_brgy" class="block text-[11px] font-bold text-zinc-200 mb-1">
+                            Barangay <span class="text-red-400">*</span>
                         </label>
                         <input type="text" name="address_brgy" id="address_brgy" value="{{ $oldBrgy }}" required
                             placeholder="e.g. Brgy. Poblacion"
-                            class="w-full px-3 py-2 rounded-xl glass-input text-xs font-semibold">
+                            class="w-full px-3 py-2 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all">
                     </div>
                     <div>
-                        <label for="address_city" class="block text-[11px] font-bold text-slate-700 mb-1">
-                            Municipality / City <span class="text-red-500">*</span>
+                        <label for="address_city" class="block text-[11px] font-bold text-zinc-200 mb-1">
+                            Municipality / City <span class="text-red-400">*</span>
                         </label>
                         <input type="text" name="address_city" id="address_city" value="{{ $oldCity }}" required
                             placeholder="e.g. Catigbian"
-                            class="w-full px-3 py-2 rounded-xl glass-input text-xs font-semibold">
+                            class="w-full px-3 py-2 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all">
                     </div>
                     <div>
-                        <label for="address_province" class="block text-[11px] font-bold text-slate-700 mb-1">
-                            Province <span class="text-red-500">*</span>
+                        <label for="address_province" class="block text-[11px] font-bold text-zinc-200 mb-1">
+                            Province <span class="text-red-400">*</span>
                         </label>
                         <input type="text" name="address_province" id="address_province" value="{{ $oldProvince }}" required
                             placeholder="e.g. Bohol"
-                            class="w-full px-3 py-2 rounded-xl glass-input text-xs font-semibold">
+                            class="w-full px-3 py-2 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all">
                     </div>
                 </div>
 
@@ -316,29 +327,29 @@
                 <input type="hidden" name="address" id="full_address" value="{{ old('address') }}">
 
                 <!-- Live Address Format Preview -->
-                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px]">
-                    <span class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">📍 Full Address Preview:</span>
-                    <span id="addressPreviewText" class="font-bold text-slate-800 ml-1">
+                <div class="p-3 rounded-xl bg-zinc-900 border border-zinc-700 text-[11px]">
+                    <span class="font-bold text-zinc-400 uppercase tracking-wider text-[10px]">📍 Full Address Preview:</span>
+                    <span id="addressPreviewText" class="font-extrabold text-white ml-1">
                         {{ old('address') ? old('address') : 'Please fill in Barangay, Municipality/City, and Province' }}
                     </span>
                 </div>
                 @error('address')
-                    <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                    <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Set Up Password (Strong Password Trapping) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div>
-                    <label for="reg_password" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                        Strong Password <span class="text-red-500">*</span>
+                    <label for="reg_password" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                        Strong Password <span class="text-red-400">*</span>
                     </label>
                     <div class="relative">
                         <input type="password" name="password" id="reg_password" required minlength="8"
                             placeholder="Min 8 characters"
-                            class="w-full pl-4 pr-11 py-2.5 rounded-xl glass-input text-sm font-semibold @error('password') border-rose-400 bg-rose-50/30 @enderror">
+                            class="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-sm font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('password') border-rose-500 @enderror">
                         <button type="button" onclick="togglePasswordVisibility('reg_password', this)"
-                            class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-sky-600 focus:outline-none cursor-pointer transition-colors z-10"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-zinc-300 hover:text-white focus:outline-none cursor-pointer transition-colors z-10"
                             title="Show/Hide password">
                             <svg class="w-4 h-4 eye-open" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -350,20 +361,20 @@
                         </button>
                     </div>
                     @error('password')
-                        <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
+                        <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label for="password_confirmation" class="block text-xs font-bold uppercase tracking-wider text-slate-900 mb-1">
-                        Confirm Password <span class="text-red-500">*</span>
+                    <label for="password_confirmation" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
+                        Confirm Password <span class="text-red-400">*</span>
                     </label>
                     <div class="relative">
                         <input type="password" name="password_confirmation" id="password_confirmation" required minlength="8"
                             placeholder="Re-enter password"
-                            class="w-full pl-4 pr-11 py-2.5 rounded-xl glass-input text-sm font-semibold">
+                            class="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-sm font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all">
                         <button type="button" onclick="togglePasswordVisibility('password_confirmation', this)"
-                            class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-sky-600 focus:outline-none cursor-pointer transition-colors z-10"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-zinc-300 hover:text-white focus:outline-none cursor-pointer transition-colors z-10"
                             title="Show/Hide password">
                             <svg class="w-4 h-4 eye-open" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -379,33 +390,33 @@
             </div>
 
             <!-- Real-time Password Strength Meter & Interactive Checklist -->
-            <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200 space-y-2.5">
+            <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2.5">
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-black uppercase tracking-wider text-slate-700">Password Strength:</span>
-                    <span id="strengthLabel" class="text-[11px] font-black text-slate-400">Not Entered</span>
+                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-white">Password Strength:</span>
+                    <span id="strengthLabel" class="text-[11px] font-extrabold text-zinc-400">Not Entered</span>
                 </div>
-                <div class="w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                <div class="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                     <div id="strengthBar" class="h-full w-0 transition-all duration-300 rounded-full bg-rose-500"></div>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
-                    <div id="ruleLength" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors">
-                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                    <div id="ruleLength" class="flex items-center gap-1.5 text-zinc-400 font-semibold transition-colors">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-zinc-800 text-zinc-300 text-[10px]">○</span>
                         <span>8+ Characters</span>
                     </div>
-                    <div id="ruleUpper" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors">
-                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                    <div id="ruleUpper" class="flex items-center gap-1.5 text-zinc-400 font-semibold transition-colors">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-zinc-800 text-zinc-300 text-[10px]">○</span>
                         <span>Uppercase (A-Z)</span>
                     </div>
-                    <div id="ruleLower" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors">
-                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                    <div id="ruleLower" class="flex items-center gap-1.5 text-zinc-400 font-semibold transition-colors">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-zinc-800 text-zinc-300 text-[10px]">○</span>
                         <span>Lowercase (a-z)</span>
                     </div>
-                    <div id="ruleNumber" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors">
-                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                    <div id="ruleNumber" class="flex items-center gap-1.5 text-zinc-400 font-semibold transition-colors">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-zinc-800 text-zinc-300 text-[10px]">○</span>
                         <span>Number (0-9)</span>
                     </div>
-                    <div id="ruleSpecial" class="flex items-center gap-1.5 text-slate-400 font-semibold transition-colors sm:col-span-2">
-                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-[10px]">○</span>
+                    <div id="ruleSpecial" class="flex items-center gap-1.5 text-zinc-400 font-semibold transition-colors sm:col-span-2">
+                        <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-zinc-800 text-zinc-300 text-[10px]">○</span>
                         <span>Special Character (!@#$%^&*)</span>
                     </div>
                 </div>
@@ -413,16 +424,16 @@
 
             <!-- Submit Button -->
             <button type="submit" id="submitSignupBtn"
-                class="w-full py-3.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-sm shadow-md shadow-sky-500/20 transition-all mt-3">
+                class="w-full py-3.5 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black font-extrabold text-sm shadow-md transition-all mt-3">
                 {{ !empty($googleEmail) ? 'Complete Account Setup' : 'Sign Up' }}
             </button>
         </form>
 
         <!-- Divider -->
         <div class="my-5 flex items-center">
-            <div class="flex-grow border-t border-slate-200"></div>
-            <span class="flex-shrink mx-3 text-xs font-semibold text-slate-500 uppercase">Or</span>
-            <div class="flex-grow border-t border-slate-200"></div>
+            <div class="flex-grow border-t border-zinc-800"></div>
+            <span class="shrink mx-3 text-xs font-bold text-zinc-400 uppercase">Or</span>
+            <div class="flex-grow border-t border-zinc-800"></div>
         </div>
 
         <!-- Hidden Google Auth Form -->
@@ -435,23 +446,23 @@
             <input type="hidden" name="google_name" id="googleNameInput" value="">
         </form>
 
-        <!-- Single, Clean Continue with Google Button (No Duplicate) -->
+        <!-- Continue with Google Button -->
         <button type="button" id="triggerGoogleBtn" onclick="openRealGoogleModal()"
-            class="w-full py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs shadow-sm flex items-center justify-center gap-2.5 transition-colors">
+            class="w-full py-3 px-4 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2.5 transition-colors">
             <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
             </svg>
-            <span>Continue with Google</span>
+            <span class="text-white font-bold">Continue with Google</span>
         </button>
 
         <!-- Footer Link -->
-        <div class="mt-6 text-center pt-4 border-t border-slate-100">
-            <p class="text-xs font-semibold text-slate-700">
+        <div class="mt-6 text-center pt-4 border-t border-zinc-800">
+            <p class="text-xs font-semibold text-zinc-300">
                 Already have an account?
-                <a href="{{ route('login') }}" class="font-extrabold text-sky-700 hover:text-sky-900">
+                <a href="{{ route('login') }}" class="font-extrabold text-white hover:underline ml-1">
                     Sign In
                 </a>
             </p>
@@ -460,30 +471,30 @@
     </div>
 </div>
 
-<!-- ==================== REAL GOOGLE ACCOUNT CHOOSER MODAL ==================== -->
-<div id="realGoogleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs hidden transition-all">
-    <div class="w-full max-w-sm rounded-3xl bg-white p-6 sm:p-7 shadow-2xl border border-white/90 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+<!-- ==================== REAL GOOGLE ACCOUNT CHOOSER MODAL (Dark Mode) ==================== -->
+<div id="realGoogleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs hidden transition-all">
+    <div class="w-full max-w-sm rounded-3xl bg-[#141418] p-6 sm:p-7 shadow-2xl border border-zinc-800 space-y-4 animate-in fade-in zoom-in-95 duration-150 text-zinc-100">
         
         <!-- Google Header -->
-        <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-start justify-between border-b border-zinc-800 pb-3">
             <div class="flex items-center gap-2.5">
-                <svg class="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
                 <div>
-                    <h3 class="text-sm font-black text-slate-950">Choose an account</h3>
-                    <p class="text-[11px] text-slate-500 font-semibold">to continue to <strong class="text-slate-900">Findjobph</strong></p>
+                    <h3 class="text-sm font-bold text-white">Choose an account</h3>
+                    <p class="text-[11px] text-zinc-400 font-medium">to continue to <strong class="text-white">Findjobph</strong></p>
                 </div>
             </div>
-            <button type="button" onclick="closeRealGoogleModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
+            <button type="button" onclick="closeRealGoogleModal()" class="text-zinc-400 hover:text-white p-1 rounded-lg">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
 
-        <p class="text-[11px] font-semibold text-slate-600">
+        <p class="text-[11px] font-medium text-zinc-300">
             Select a verified Google account to sign up:
         </p>
 
@@ -493,35 +504,35 @@
         </div>
 
         <!-- Add / Use Another Real Account -->
-        <div class="pt-2 border-t border-slate-100 space-y-2.5">
+        <div class="pt-2 border-t border-zinc-800 space-y-2.5">
             <button type="button" onclick="toggleAddGoogleAccountForm()" id="showUseAnotherAccountBtn"
-                class="w-full py-2 px-3 rounded-2xl hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-3 transition-colors text-left border border-dashed border-slate-200">
-                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm">
+                class="w-full py-2 px-3 rounded-2xl hover:bg-zinc-850 text-zinc-300 font-bold text-xs flex items-center gap-3 transition-colors text-left border border-dashed border-zinc-700">
+                <div class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center font-bold text-sm">
                     +
                 </div>
                 <div>
-                    <p class="text-xs font-bold text-slate-900">Use another account</p>
-                    <p class="text-[10px] text-slate-500 font-semibold">Sign in with any Google email</p>
+                    <p class="text-xs font-bold text-white">Use another account</p>
+                    <p class="text-[10px] text-zinc-400 font-medium">Sign in with any Google email</p>
                 </div>
             </button>
 
             <!-- Inline Form for Another Google Account -->
-            <div id="useAnotherAccountForm" class="hidden p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <label for="directGoogleEmail" class="block text-[10px] font-bold uppercase text-slate-700">Google Email</label>
+            <div id="useAnotherAccountForm" class="hidden p-3 rounded-2xl bg-zinc-900 border border-zinc-750 space-y-2">
+                <label for="directGoogleEmail" class="block text-[10px] font-bold uppercase text-zinc-400">Google Email</label>
                 <input type="email" id="directGoogleEmail" placeholder="your.name@gmail.com"
-                    class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-semibold focus:border-sky-500 focus:outline-none">
+                    class="w-full px-3 py-2 rounded-xl bg-[#18181b] border border-zinc-700 text-white text-xs font-semibold focus:border-white focus:outline-none">
                 <div class="flex items-center justify-end gap-2 pt-1">
-                    <button type="button" onclick="toggleAddGoogleAccountForm(false)" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-200/70">
+                    <button type="button" onclick="toggleAddGoogleAccountForm(false)" class="px-3 py-1 rounded-lg text-xs font-bold text-zinc-400 hover:text-white">
                         Cancel
                     </button>
-                    <button type="button" onclick="submitRealGoogleDirect()" class="px-3.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-sm">
+                    <button type="button" onclick="submitRealGoogleDirect()" class="px-3.5 py-1 rounded-lg bg-white hover:bg-zinc-200 text-black text-xs font-extrabold shadow-sm">
                         Continue
                     </button>
                 </div>
             </div>
         </div>
 
-        <p class="text-[10px] text-slate-400 text-center leading-normal">
+        <p class="text-[10px] text-zinc-500 text-center leading-normal">
             Your Google profile and email will automatically connect with Findjobph.
         </p>
 
@@ -557,8 +568,8 @@
             workerFields.classList.add('hidden');
             employerFields.classList.remove('hidden');
 
-            roleBtnEmployer.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-sm bg-white text-slate-950 border border-slate-200';
-            roleBtnWorker.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-950';
+            roleBtnEmployer.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-sm bg-white text-black';
+            roleBtnWorker.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 text-zinc-400 hover:text-white';
 
             // Enable employer fields
             employerFirstName.disabled = false;
@@ -575,8 +586,8 @@
             employerFields.classList.add('hidden');
             workerFields.classList.remove('hidden');
 
-            roleBtnWorker.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-sm bg-white text-slate-950 border border-slate-200';
-            roleBtnEmployer.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-950';
+            roleBtnWorker.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-sm bg-white text-black';
+            roleBtnEmployer.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2 text-zinc-400 hover:text-white';
 
             // Enable worker fields
             workerFirstName.disabled = false;
@@ -666,13 +677,13 @@
         const elem = document.getElementById(elemId);
         const icon = elem.querySelector('.rule-icon');
         if (passed) {
-            elem.className = 'flex items-center gap-1.5 text-emerald-700 font-bold transition-colors';
+            elem.className = 'flex items-center gap-1.5 text-emerald-400 font-bold transition-colors';
             icon.textContent = '✓';
-            icon.className = 'rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black';
+            icon.className = 'rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-emerald-950/80 border border-emerald-700 text-emerald-300 text-[10px] font-black';
         } else {
-            elem.className = 'flex items-center gap-1.5 text-slate-400 font-semibold transition-colors';
+            elem.className = 'flex items-center gap-1.5 text-zinc-400 font-semibold transition-colors';
             icon.textContent = '○';
-            icon.className = 'rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 text-[10px]';
+            icon.className = 'rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-zinc-800 text-zinc-400 text-[10px]';
         }
     }
 
@@ -698,9 +709,9 @@
 
         if (pwd.length === 0) {
             strengthBar.style.width = '0%';
-            strengthBar.className = 'h-full transition-all duration-300 rounded-full bg-slate-300';
+            strengthBar.className = 'h-full transition-all duration-300 rounded-full bg-zinc-700';
             strengthLabel.textContent = 'Not Entered';
-            strengthLabel.className = 'text-[11px] font-black text-slate-400';
+            strengthLabel.className = 'text-[11px] font-extrabold text-zinc-400';
             return 0;
         }
 
@@ -708,17 +719,17 @@
             strengthBar.style.width = '30%';
             strengthBar.className = 'h-full transition-all duration-300 rounded-full bg-rose-500';
             strengthLabel.textContent = 'Weak';
-            strengthLabel.className = 'text-[11px] font-black text-rose-600';
+            strengthLabel.className = 'text-[11px] font-extrabold text-rose-400';
         } else if (score === 3 || score === 4) {
             strengthBar.style.width = score === 3 ? '60%' : '80%';
             strengthBar.className = 'h-full transition-all duration-300 rounded-full bg-amber-500';
             strengthLabel.textContent = score === 3 ? 'Fair' : 'Good';
-            strengthLabel.className = 'text-[11px] font-black text-amber-600';
+            strengthLabel.className = 'text-[11px] font-extrabold text-amber-400';
         } else if (score === 5) {
             strengthBar.style.width = '100%';
             strengthBar.className = 'h-full transition-all duration-300 rounded-full bg-emerald-500';
             strengthLabel.textContent = 'Strong ✓';
-            strengthLabel.className = 'text-[11px] font-black text-emerald-600';
+            strengthLabel.className = 'text-[11px] font-extrabold text-emerald-400';
         }
 
         return score;
@@ -736,11 +747,11 @@
         passwordMatchStatus.classList.remove('hidden');
         if (pwd === confirm) {
             passwordMatchStatus.textContent = '✓ Passwords match';
-            passwordMatchStatus.className = 'text-[11px] font-black text-emerald-600 mt-1.5';
+            passwordMatchStatus.className = 'text-[11px] font-extrabold text-emerald-400 mt-1.5';
             return true;
         } else {
             passwordMatchStatus.textContent = '✗ Passwords do not match';
-            passwordMatchStatus.className = 'text-[11px] font-black text-rose-600 mt-1.5';
+            passwordMatchStatus.className = 'text-[11px] font-extrabold text-rose-400 mt-1.5';
             return false;
         }
     }
@@ -953,18 +964,18 @@
             const safeEmail = acc.email.replace(/'/g, "\\'");
             const safeName = (acc.name || '').replace(/'/g, "\\'");
             return `
-                <div class="group flex items-center justify-between p-2.5 rounded-2xl hover:bg-sky-50/80 border border-slate-100 hover:border-sky-200 cursor-pointer transition-all"
+                <div class="group flex items-center justify-between p-2.5 rounded-2xl hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 cursor-pointer transition-all"
                      onclick="selectRealGoogleAccount('${safeEmail}', '${safeName}')">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-9 h-9 rounded-full ${color} text-white flex items-center justify-center font-black text-xs shadow-sm flex-shrink-0">
                             ${initial}
                         </div>
                         <div class="min-w-0">
-                            <p class="text-xs font-bold text-slate-950 truncate">${acc.name}</p>
-                            <p class="text-[11px] text-slate-500 truncate font-semibold">${acc.email}</p>
+                            <p class="text-xs font-bold text-white truncate">${acc.name}</p>
+                            <p class="text-[11px] text-zinc-400 truncate font-semibold">${acc.email}</p>
                         </div>
                     </div>
-                    <span class="text-xs font-bold text-sky-700 group-hover:translate-x-0.5 transition-all">
+                    <span class="text-xs font-bold text-zinc-300 group-hover:text-white group-hover:translate-x-0.5 transition-all">
                         &rarr;
                     </span>
                 </div>

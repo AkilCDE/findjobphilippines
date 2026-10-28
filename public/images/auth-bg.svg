@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="authBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050508" />
+      <stop offset="50%" stop-color="#0a0a0f" />
+      <stop offset="100%" stop-color="#060609" />
+    </linearGradient>
+
+    <radialGradient id="authGlowLeft" cx="20%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#ea580c" stop-opacity="0.12" />
+      <stop offset="60%" stop-color="#ea580c" stop-opacity="0.02" />
+      <stop offset="100%" stop-color="#ea580c" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="authGlowRight" cx="80%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.12" />
+      <stop offset="60%" stop-color="#10b981" stop-opacity="0.02" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+    </radialGradient>
+
+    <filter id="authBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="40" />
+    </filter>
+
+    <pattern id="authGrid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#27272a" stroke-width="0.7" stroke-opacity="0.2" />
+    </pattern>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#authBg)" />
+  <rect width="100%" height="100%" fill="url(#authGrid)" />
+
+  <g filter="url(#authBlur)">
+    <circle cx="360" cy="420" r="380" fill="url(#authGlowLeft)" />
+    <circle cx="1560" cy="420" r="380" fill="url(#authGlowRight)" />
+    <circle cx="960" cy="300" r="300" fill="#3b82f6" fill-opacity="0.05" />
+  </g>
+
+  <!-- Distant City Lights / Bokeh -->
+  <g fill="#ffffff" fill-opacity="0.15" filter="url(#authBlur)">
+    <circle cx="200" cy="300" r="8" />
+    <circle cx="450" cy="220" r="12" />
+    <circle cx="1400" cy="260" r="10" />
+    <circle cx="1700" cy="340" r="14" />
+  </g>
+</svg>
+

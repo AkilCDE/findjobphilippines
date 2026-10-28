@@ -50,6 +50,17 @@ class AdminController extends Controller
                 ->count();
         }
 
+        // 1b. Monthly Job Postings Volume (Last 6 Months)
+        $monthlyDates = [];
+        $monthlyPostsData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $m = now()->subMonths($i);
+            $monthlyDates[] = $m->format('M Y');
+            $monthlyPostsData[] = JobPost::whereYear('created_at', $m->year)
+                ->whereMonth('created_at', $m->month)
+                ->count();
+        }
+
         // 2. Job Posts by Category
         $categoryData = JobPost::selectRaw('category, count(*) as count')
             ->groupBy('category')
@@ -85,6 +96,8 @@ class AdminController extends Controller
             'trendDates',
             'trendApplications',
             'trendHires',
+            'monthlyDates',
+            'monthlyPostsData',
             'categoryData',
             'applicationStatusData'
         ));

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\JobApplication;
 use App\Models\JobPost;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -396,6 +398,83 @@ class EmployerController extends Controller
         ]);
 
         return back()->with('success', "Application from {$application->worker->display_name} has been set to Rejected.");
+    }
+
+    /**
+     * Display worker QR scanner page for employer.
+     */
+    public function scanner(): View
+    {
+        return view('employer.scanner');
+    }
+
+    /**
+     * Handle scanned QR payload and return real-time worker status & info.
+     */
+    public function scanWorkerQr(Request $request): JsonResponse
+    {
+        $code = trim((string) $request->input('code', ''));
+
+        if (empty($code)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No QR code payload received.',
+            ], 422);
+        }
+
+        $worker = null;
+
+        // 1. JSON payload
+        if (str_starts_with($code, '{') && str_ends_with($code, '}')) {
+            $data = json_decode($code, true);
+            if (is_array($data)) {
+                if (! empty($data['token'])) {
+                    $worker = User::findByQrToken((string) $data['token']);
+                }
+                if (! $worker && ! empty($data['worker_id'])) {
+                    $candidate = User::find($data['worker_id']);
+                    if ($candidate && $candidate->isWorker()) {
+                        $worker = $candidate;
+                    }
+                }
+            }
+        }
+
+        // 2. Verification URL containing token
+        if (! $worker && (str_contains($code, '/qr/verify/') || str_contains($code, 'token='))) {
+            if (preg_match('#/qr/verify/([a-zA-Z0-9_\-]+)#', $code, $matches)) {
+                $worker = User::findByQrToken($matches[1]);
+            } elseif (preg_match('#token=([a-zA-Z0-9_\-]+)#', $code, $matches)) {
+                $worker = User::findByQrToken($matches[1]);
+            }
+        }
+
+        // 3. Direct token
+        if (! $worker) {
+            $worker = User::findByQrToken($code);
+        }
+
+        // 4. Numeric worker ID fallback
+        if (! $worker && ctype_digit($code)) {
+            $candidate = User::find((int) $code);
+            if ($candidate && $candidate->isWorker()) {
+                $worker = $candidate;
+            }
+        }
+
+        if (! $worker) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Worker digital pass not found or invalid QR code format.',
+            ], 404);
+        }
+
+        $profile = $worker->getQrProfileData();
+
+        return response()->json([
+            'success' => true,
+            'worker' => $profile,
+        ]);
     }
 
     /**

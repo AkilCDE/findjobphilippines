@@ -10,6 +10,51 @@ use Illuminate\View\View;
 class JobPostController extends Controller
 {
     /**
+     * Display the marketing landing page with prominent browse button and platform tutorial.
+     */
+    public function landing(): View
+    {
+        $openJobsCount = JobPost::active()->where('status', 'open')->count();
+        $totalEmployersCount = JobPost::active()->distinct('employer_id')->count('employer_id');
+        $hiredWorkersCount = (int) JobPost::active()->sum('workers_hired');
+        $totalSlotsCount = (int) JobPost::active()->sum('workers_needed');
+
+        $categories = [
+            'Construction & Skilled Trades' => ['icon' => 'hammer', 'desc' => 'Carpenters, masons, welders, plumbers'],
+            'Agriculture & Farming' => ['icon' => 'sprout', 'desc' => 'Crop cultivation, harvesting, livestock handling'],
+            'Hospitality & Tourism' => ['icon' => 'hotel', 'desc' => 'Hotel staff, baristas, servers, resort guides'],
+            'IT & Tech Support' => ['icon' => 'cpu', 'desc' => 'Hardware repair, networking, customer technical support'],
+            'Logistics & Delivery' => ['icon' => 'truck', 'desc' => 'Motorcycle riders, truck drivers, warehouse helpers'],
+            'Retail & Sales' => ['icon' => 'shopping-bag', 'desc' => 'Cashiers, store clerks, merchandisers'],
+            'Healthcare & Caregiving' => ['icon' => 'heart-pulse', 'desc' => 'Caregivers, medical aids, clinic assistants'],
+            'Office & Admin' => ['icon' => 'briefcase', 'desc' => 'Clerical staff, data encoders, front desk'],
+            'Manufacturing & Factory' => ['icon' => 'factory', 'desc' => 'Assembly line, packagers, machine operators'],
+            'General Labor' => ['icon' => 'user-check', 'desc' => 'Maintenance, janitorial, moving, utility staff'],
+        ];
+
+        $popularLocations = [
+            'Bohol',
+            'Cebu',
+            'Metro Manila',
+            'Davao',
+            'Iloilo',
+            'Pampanga',
+            'Baguio',
+            'Batangas',
+            'Cagayan de Oro',
+        ];
+
+        return view('welcome', compact(
+            'openJobsCount',
+            'totalEmployersCount',
+            'hiredWorkersCount',
+            'totalSlotsCount',
+            'categories',
+            'popularLocations'
+        ));
+    }
+
+    /**
      * Display a listing of job opportunities with comprehensive filters.
      */
     public function index(Request $request): View
