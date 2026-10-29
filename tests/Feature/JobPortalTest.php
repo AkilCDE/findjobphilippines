@@ -477,55 +477,6 @@ class JobPortalTest extends TestCase
         $this->assertNotNull($application->selfie_path);
     }
 
-    public function test_google_auth_redirects_unregistered_users_to_complete_account_setup(): void
-    {
-        // When Google account does not exist in DB
-        $response = $this->post('/auth/google', [
-            'google_email' => 'maria.google.test@gmail.com',
-            'google_name' => 'Maria Santos',
-            'google_role' => 'worker',
-        ]);
-
-        // Should NOT direct to home page. Must redirect to register to set up account!
-        $response->assertRedirect();
-        $response->assertSessionHas('google_setup', true);
-        $this->assertTrue(str_contains($response->headers->get('Location'), 'register'));
-        $this->assertGuest();
-
-        // Complete account setup on register
-        $registerResponse = $this->post('/register', [
-            'role' => 'worker',
-            'first_name' => 'Maria',
-            'last_name' => 'Santos',
-            'email' => 'maria.google.test@gmail.com',
-            'sex' => 'Female',
-            'address' => 'Brgy. Luz, Cebu City, Cebu',
-            'contact_number' => '+63 917 123 4567',
-            'password' => 'secretPassword123!',
-            'password_confirmation' => 'secretPassword123!',
-        ]);
-
-        $registerResponse->assertRedirect(route('jobs.index'));
-        $this->assertAuthenticated();
-        $this->assertDatabaseHas('users', [
-            'email' => 'maria.google.test@gmail.com',
-            'name' => 'Maria Santos',
-        ]);
-
-        // Signing out
-        $this->post('/logout');
-        $this->assertGuest();
-
-        // Subsequent sign-in with Google immediately authenticates already set up user
-        $loginResponse = $this->post('/auth/google', [
-            'google_email' => 'maria.google.test@gmail.com',
-            'google_name' => 'Maria Santos',
-        ]);
-
-        $loginResponse->assertRedirect(route('jobs.index'));
-        $this->assertAuthenticated();
-    }
-
     public function test_employer_can_edit_own_job_post(): void
     {
         $employer = User::factory()->create(['role' => 'employer']);
@@ -754,27 +705,31 @@ class JobPortalTest extends TestCase
         $response->assertSee('Pedro Penduko');
     }
 
-    public function test_google_auth_accepts_gis_jwt_credential(): void
+    public function test_login_and_register_pages_have_no_continue_with_google_button_or_route(): void
     {
-        $header = rtrim(strtr(base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT'])), '+/', '-_'), '=');
-        $payloadData = [
-            'email' => 'device.google.user@gmail.com',
-            'name' => 'Google Device User',
-            'sub' => '1234567890',
-        ];
-        $payload = rtrim(strtr(base64_encode(json_encode($payloadData)), '+/', '-_'), '=');
-        $signature = 'dummySignature';
-        $dummyJwt = "{$header}.{$payload}.{$signature}";
+        // 1. Login page must NOT contain Continue with Google button or GIS components
+        $loginRes = $this->get('/login');
+        $loginRes->assertStatus(200);
+        $loginRes->assertDontSee('Continue with Google');
+        $loginRes->assertDontSee('g_id_onload', false);
+        $loginRes->assertDontSee('g_id_signin', false);
+        $loginRes->assertDontSee('id="realGoogleModal"', false);
+        $loginRes->assertDontSee('javabrocode@gmail.com');
+        $loginRes->assertDontSee('akilcyrylle@gmail.com');
 
-        $response = $this->post('/auth/google', [
-            'credential' => $dummyJwt,
-            'google_role' => 'worker',
-        ]);
+        // 2. Register page must NOT contain Continue with Google button or GIS components
+        $regRes = $this->get('/register');
+        $regRes->assertStatus(200);
+        $regRes->assertDontSee('Continue with Google');
+        $regRes->assertDontSee('g_id_onload', false);
+        $regRes->assertDontSee('g_id_signin', false);
+        $regRes->assertDontSee('id="realGoogleModal"', false);
+        $regRes->assertDontSee('javabrocode@gmail.com');
+        $regRes->assertDontSee('akilcyrylle@gmail.com');
 
-        $response->assertRedirect();
-        $response->assertSessionHas('google_setup', true);
-        $this->assertTrue(str_contains($response->headers->get('Location'), 'device.google.user%40gmail.com') || str_contains($response->headers->get('Location'), 'device.google.user@gmail.com'));
-        $this->assertGuest();
+        // 3. /auth/google route must be completely removed (404)
+        $googleRouteRes = $this->post('/auth/google', []);
+        $googleRouteRes->assertStatus(404);
     }
 
     public function test_registration_trappings_validate_all_required_fields_and_strong_password(): void

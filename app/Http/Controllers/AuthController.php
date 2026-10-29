@@ -66,10 +66,7 @@ class AuthController extends Controller
             ? $request->query('role')
             : 'worker';
 
-        $googleEmail = $request->query('google_email', session('google_email', ''));
-        $googleName = $request->query('google_name', session('google_name', ''));
-
-        return view('auth.register', compact('defaultRole', 'googleEmail', 'googleName'));
+        return view('auth.register', compact('defaultRole'));
     }
 
     /**
@@ -284,55 +281,6 @@ class AuthController extends Controller
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return redirect()->route('login')->with('success', 'Your password has been successfully reset. You can now sign in.');
-    }
-
-    /**
-     * Functional Google Sign-In & Registration handler.
-     */
-    public function googleAuth(Request $request): RedirectResponse
-    {
-        $email = trim((string) $request->input('google_email'));
-        $name = trim((string) $request->input('google_name'));
-        $role = $request->input('google_role', 'worker');
-
-        // Support official Google Identity Services JWT ID token credential
-        if ($request->filled('credential')) {
-            $jwt = (string) $request->input('credential');
-            $parts = explode('.', $jwt);
-            if (count($parts) === 3) {
-                $payloadJson = base64_decode(strtr($parts[1], '-_', '+/'));
-                $payload = json_decode($payloadJson, true);
-                if (is_array($payload) && ! empty($payload['email'])) {
-                    $email = trim((string) $payload['email']);
-                    $name = trim((string) ($payload['name'] ?? ''));
-                }
-            }
-        }
-
-        if (! $email) {
-            return back()->with('error', 'Please choose a Google account to continue.');
-        }
-
-        $user = User::where('email', $email)->first();
-
-        // If user already exists in the system, log them in and proceed
-        if ($user) {
-            Auth::login($user);
-            $request->session()->regenerate();
-
-            return $this->redirectBasedOnRole($user)
-                ->with('success', "Signed in with Google as {$user->display_name}!");
-        }
-
-        // User does not have an account set up yet.
-        // Mandatory requirement: Automatically redirect to sign up to set up password and names.
-        // Do not redirect to the home page until account setup is completed!
-        return redirect()->route('register', [
-            'role' => $role,
-            'google_email' => $email,
-            'google_name' => $name,
-        ])->with('google_setup', true)
-            ->with('info', "Continuing with Google ({$email}). Please complete your account setup with your password and name details to get started.");
     }
 
     /**

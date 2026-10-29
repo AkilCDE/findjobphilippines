@@ -18,10 +18,10 @@
         <!-- Header -->
         <div class="text-center mb-6">
             <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                {{ !empty($googleEmail) ? 'Complete Account Setup' : 'Create Account' }}
+                Create Account
             </h1>
             <p class="text-xs font-medium text-zinc-400 mt-1">
-                {{ !empty($googleEmail) ? 'Set up your password, names, and details to finish your Google registration' : 'Choose your account type to get started' }}
+                Choose your account type to get started
             </p>
         </div>
 
@@ -55,33 +55,7 @@
             </div>
         </div>
 
-        <!-- Google Connected Banner (if continuing with Google) -->
-        @if(!empty($googleEmail))
-            <div class="mb-6 p-4 rounded-2xl bg-sky-950/80 border border-sky-800 flex items-start gap-3 shadow-md">
-                <div class="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-700 shadow-sm flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                    </svg>
-                </div>
-                <div class="flex-1 text-xs">
-                    <p class="font-black text-white">
-                        Continuing with Google: <span class="text-sky-400 font-bold underline">{{ $googleEmail }}</span>
-                    </p>
-                    <p class="font-semibold text-zinc-300 mt-0.5">
-                        You must set up your password, names, and contact details below before accessing your account.
-                    </p>
-                </div>
-            </div>
-        @endif
-
         @php
-            $googleNameParts = !empty($googleName) ? explode(' ', $googleName, 2) : ['', ''];
-            $prefillFirst = $googleNameParts[0] ?? '';
-            $prefillLast = $googleNameParts[1] ?? '';
-
             // Parse previous full address if validation returned
             $oldAddress = old('address', '');
             $oldParts = array_map('trim', explode(',', $oldAddress));
@@ -118,7 +92,7 @@
                         <label for="worker_first_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
                             First Name <span class="text-red-400">*</span>
                         </label>
-                        <input type="text" name="first_name" id="worker_first_name" value="{{ old('first_name', $prefillFirst) }}"
+                        <input type="text" name="first_name" id="worker_first_name" value="{{ old('first_name') }}"
                             placeholder="First Name"
                             class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('first_name') border-rose-500 @enderror">
                         @error('first_name')
@@ -140,7 +114,7 @@
                         <label for="worker_last_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
                             Last Name <span class="text-red-400">*</span>
                         </label>
-                        <input type="text" name="last_name" id="worker_last_name" value="{{ old('last_name', $prefillLast) }}"
+                        <input type="text" name="last_name" id="worker_last_name" value="{{ old('last_name') }}"
                             placeholder="Last Name"
                             class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('last_name') border-rose-500 @enderror">
                         @error('last_name')
@@ -179,7 +153,7 @@
                         <label for="employer_first_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
                             First Name <span class="text-red-400">*</span>
                         </label>
-                        <input type="text" name="first_name" id="employer_first_name" value="{{ old('first_name', $prefillFirst) }}"
+                        <input type="text" name="first_name" id="employer_first_name" value="{{ old('first_name') }}"
                             placeholder="First Name"
                             class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('first_name') border-rose-500 @enderror">
                         @error('first_name')
@@ -203,7 +177,7 @@
                         <label for="employer_last_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
                             Last Name <span class="text-red-400">*</span>
                         </label>
-                        <input type="text" name="last_name" id="employer_last_name" value="{{ old('last_name', $prefillLast) }}"
+                        <input type="text" name="last_name" id="employer_last_name" value="{{ old('last_name') }}"
                             placeholder="Last Name"
                             class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('last_name') border-rose-500 @enderror">
                         @error('last_name')
@@ -217,7 +191,7 @@
                         <label for="company_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
                             Company / Business Name <span class="text-zinc-400 font-normal">(Optional)</span>
                         </label>
-                        <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $googleName ?? '') }}"
+                        <input type="text" name="company_name" id="company_name" value="{{ old('company_name') }}"
                             placeholder="e.g. Catigbian Agro Builders"
                             class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-sm font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('company_name') border-rose-500 @enderror">
                         @error('company_name')
@@ -253,7 +227,7 @@
                     </label>
                     <span class="text-[10px] font-bold text-zinc-400">Must be unique</span>
                 </div>
-                <input type="email" name="email" id="reg_email" value="{{ old('email', $googleEmail ?? '') }}" required
+                <input type="email" name="email" id="reg_email" value="{{ old('email') }}" required
                     placeholder="email@example.com"
                     class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-sm font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('email') border-rose-500 @enderror">
                 @error('email')
@@ -425,38 +399,9 @@
             <!-- Submit Button -->
             <button type="submit" id="submitSignupBtn"
                 class="w-full py-3.5 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black font-extrabold text-sm shadow-md transition-all mt-3">
-                {{ !empty($googleEmail) ? 'Complete Account Setup' : 'Sign Up' }}
+                Sign Up
             </button>
         </form>
-
-        <!-- Divider -->
-        <div class="my-5 flex items-center">
-            <div class="flex-grow border-t border-zinc-800"></div>
-            <span class="shrink mx-3 text-xs font-bold text-zinc-400 uppercase">Or</span>
-            <div class="flex-grow border-t border-zinc-800"></div>
-        </div>
-
-        <!-- Hidden Google Auth Form -->
-        <form method="POST" action="{{ route('auth.google') }}" id="googleAuthForm" class="hidden">
-            @csrf
-            <input type="hidden" name="flow" value="register">
-            <input type="hidden" name="google_role" id="googleRoleField" value="{{ $currentRole }}">
-            <input type="hidden" name="credential" id="googleCredentialInput" value="">
-            <input type="hidden" name="google_email" id="googleEmailInput" value="">
-            <input type="hidden" name="google_name" id="googleNameInput" value="">
-        </form>
-
-        <!-- Continue with Google Button -->
-        <button type="button" id="triggerGoogleBtn" onclick="openRealGoogleModal()"
-            class="w-full py-3 px-4 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2.5 transition-colors">
-            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-            </svg>
-            <span class="text-white font-bold">Continue with Google</span>
-        </button>
 
         <!-- Footer Link -->
         <div class="mt-6 text-center pt-4 border-t border-zinc-800">
@@ -471,81 +416,12 @@
     </div>
 </div>
 
-<!-- ==================== REAL GOOGLE ACCOUNT CHOOSER MODAL (Dark Mode) ==================== -->
-<div id="realGoogleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs hidden transition-all">
-    <div class="w-full max-w-sm rounded-3xl bg-[#141418] p-6 sm:p-7 shadow-2xl border border-zinc-800 space-y-4 animate-in fade-in zoom-in-95 duration-150 text-zinc-100">
-        
-        <!-- Google Header -->
-        <div class="flex items-start justify-between border-b border-zinc-800 pb-3">
-            <div class="flex items-center gap-2.5">
-                <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-                <div>
-                    <h3 class="text-sm font-bold text-white">Choose an account</h3>
-                    <p class="text-[11px] text-zinc-400 font-medium">to continue to <strong class="text-white">Findjobph</strong></p>
-                </div>
-            </div>
-            <button type="button" onclick="closeRealGoogleModal()" class="text-zinc-400 hover:text-white p-1 rounded-lg">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-        </div>
-
-        <p class="text-[11px] font-medium text-zinc-300">
-            Select a verified Google account to sign up:
-        </p>
-
-        <!-- Real Detected Device Google Accounts -->
-        <div id="deviceGoogleAccountsList" class="space-y-2 max-h-56 overflow-y-auto pr-1">
-            <!-- Dynamically populated from device sessions -->
-        </div>
-
-        <!-- Add / Use Another Real Account -->
-        <div class="pt-2 border-t border-zinc-800 space-y-2.5">
-            <button type="button" onclick="toggleAddGoogleAccountForm()" id="showUseAnotherAccountBtn"
-                class="w-full py-2 px-3 rounded-2xl hover:bg-zinc-850 text-zinc-300 font-bold text-xs flex items-center gap-3 transition-colors text-left border border-dashed border-zinc-700">
-                <div class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center font-bold text-sm">
-                    +
-                </div>
-                <div>
-                    <p class="text-xs font-bold text-white">Use another account</p>
-                    <p class="text-[10px] text-zinc-400 font-medium">Sign in with any Google email</p>
-                </div>
-            </button>
-
-            <!-- Inline Form for Another Google Account -->
-            <div id="useAnotherAccountForm" class="hidden p-3 rounded-2xl bg-zinc-900 border border-zinc-750 space-y-2">
-                <label for="directGoogleEmail" class="block text-[10px] font-bold uppercase text-zinc-400">Google Email</label>
-                <input type="email" id="directGoogleEmail" placeholder="your.name@gmail.com"
-                    class="w-full px-3 py-2 rounded-xl bg-[#18181b] border border-zinc-700 text-white text-xs font-semibold focus:border-white focus:outline-none">
-                <div class="flex items-center justify-end gap-2 pt-1">
-                    <button type="button" onclick="toggleAddGoogleAccountForm(false)" class="px-3 py-1 rounded-lg text-xs font-bold text-zinc-400 hover:text-white">
-                        Cancel
-                    </button>
-                    <button type="button" onclick="submitRealGoogleDirect()" class="px-3.5 py-1 rounded-lg bg-white hover:bg-zinc-200 text-black text-xs font-extrabold shadow-sm">
-                        Continue
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <p class="text-[10px] text-zinc-500 text-center leading-normal">
-            Your Google profile and email will automatically connect with Findjobph.
-        </p>
-
-    </div>
-</div>
-
 <script>
     /**
      * Switch role between Worker and Employer
      */
     function switchRole(role) {
         const roleInput = document.getElementById('roleInput');
-        const googleRoleField = document.getElementById('googleRoleField');
         const workerFields = document.getElementById('workerFields');
         const employerFields = document.getElementById('employerFields');
         const roleBtnWorker = document.getElementById('roleBtnWorker');
@@ -562,7 +438,6 @@
         const employerSex = document.getElementById('employer_sex');
 
         roleInput.value = role;
-        if (googleRoleField) googleRoleField.value = role;
 
         if (role === 'employer') {
             workerFields.classList.add('hidden');
@@ -932,125 +807,12 @@
         }
     }
 
-    /**
-     * Real Google accounts modal logic
-     */
-    function getDeviceGoogleAccounts() {
-        const defaultAccounts = [
-            { name: 'Johnley De Castro', email: 'javabrocode@gmail.com', role: 'Employer', color: 'bg-indigo-600' },
-            { name: 'Akil Cyrylle Dangel', email: 'akilcyrylle@gmail.com', role: 'Worker', color: 'bg-sky-600' }
-        ];
-
-        try {
-            const stored = localStorage.getItem('findjobph_real_google_accounts');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-            }
-        } catch (e) {}
-
-        localStorage.setItem('findjobph_real_google_accounts', JSON.stringify(defaultAccounts));
-        return defaultAccounts;
-    }
-
-    function renderDeviceGoogleAccounts() {
-        const accounts = getDeviceGoogleAccounts();
-        const container = document.getElementById('deviceGoogleAccountsList');
-        if (!container) return;
-
-        container.innerHTML = accounts.map((acc) => {
-            const initial = (acc.name || acc.email || 'G').charAt(0).toUpperCase();
-            const color = acc.color || 'bg-sky-600';
-            const safeEmail = acc.email.replace(/'/g, "\\'");
-            const safeName = (acc.name || '').replace(/'/g, "\\'");
-            return `
-                <div class="group flex items-center justify-between p-2.5 rounded-2xl hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 cursor-pointer transition-all"
-                     onclick="selectRealGoogleAccount('${safeEmail}', '${safeName}')">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 rounded-full ${color} text-white flex items-center justify-center font-black text-xs shadow-sm flex-shrink-0">
-                            ${initial}
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-xs font-bold text-white truncate">${acc.name}</p>
-                            <p class="text-[11px] text-zinc-400 truncate font-semibold">${acc.email}</p>
-                        </div>
-                    </div>
-                    <span class="text-xs font-bold text-zinc-300 group-hover:text-white group-hover:translate-x-0.5 transition-all">
-                        &rarr;
-                    </span>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function openRealGoogleModal() {
-        renderDeviceGoogleAccounts();
-        document.getElementById('realGoogleModal').classList.remove('hidden');
-    }
-
-    function closeRealGoogleModal() {
-        document.getElementById('realGoogleModal').classList.add('hidden');
-        toggleAddGoogleAccountForm(false);
-    }
-
-    function toggleAddGoogleAccountForm(show) {
-        const form = document.getElementById('useAnotherAccountForm');
-        const btn = document.getElementById('showUseAnotherAccountBtn');
-        const willShow = typeof show === 'boolean' ? show : form.classList.contains('hidden');
-        if (willShow) {
-            form.classList.remove('hidden');
-            btn.classList.add('hidden');
-            document.getElementById('directGoogleEmail').focus();
-        } else {
-            form.classList.add('hidden');
-            btn.classList.remove('hidden');
-        }
-    }
-
-    function selectRealGoogleAccount(email, name) {
-        const role = document.getElementById('roleInput').value || 'worker';
-        document.getElementById('googleEmailInput').value = email;
-        document.getElementById('googleNameInput').value = name;
-        document.getElementById('googleRoleField').value = role;
-        document.getElementById('googleAuthForm').submit();
-    }
-
-    function submitRealGoogleDirect() {
-        const emailInput = document.getElementById('directGoogleEmail');
-        const email = emailInput.value.trim();
-        if (!email || !email.includes('@')) {
-            alert('Please enter a valid Google email address.');
-            emailInput.focus();
-            return;
-        }
-
-        const name = email.split('@')[0];
-        const accounts = getDeviceGoogleAccounts();
-        if (!accounts.some(a => a.email.toLowerCase() === email.toLowerCase())) {
-            accounts.push({
-                name: name,
-                email: email,
-                role: 'Account',
-                color: 'bg-emerald-600'
-            });
-            localStorage.setItem('findjobph_real_google_accounts', JSON.stringify(accounts));
-        }
-
-        selectRealGoogleAccount(email, name);
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
         const initialRole = document.getElementById('roleInput').value || 'worker';
         switchRole(initialRole);
         syncAddress();
         if (contactInput.value) {
             contactInput.dispatchEvent(new Event('input'));
-        }
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeRealGoogleModal();
         }
     });
 </script>
