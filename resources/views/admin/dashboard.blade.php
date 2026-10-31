@@ -313,8 +313,13 @@
                         @forelse($recentUsers as $u)
                             <tr class="hover:bg-zinc-900/50 transition-colors">
                                 <td class="py-3 px-2">
-                                    <span class="font-bold text-white block">{{ $u->display_name }}</span>
-                                    <span class="text-[11px] text-zinc-400">{{ $u->email }}</span>
+                                    <span class="font-bold text-white block">{{ $u->name }}</span>
+                                    <div class="text-[11px] text-zinc-400">
+                                        @if($u->isEmployer() && !empty($u->company_name))
+                                            <span class="text-zinc-300 font-semibold block truncate max-w-[180px]">🏢 {{ $u->company_name }}</span>
+                                        @endif
+                                        <span>{{ $u->email }}</span>
+                                    </div>
                                 </td>
                                 <td class="py-3 px-2">
                                     <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full {{ $u->isAdmin() ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-200 border border-zinc-700' }}">
@@ -370,7 +375,10 @@
                                     <span class="text-[11px] text-zinc-400">{{ $p->category }}</span>
                                 </td>
                                 <td class="py-3 px-2">
-                                    <span class="text-zinc-300 block truncate max-w-[120px]">{{ $p->employer?->display_name ?? 'Employer' }}</span>
+                                    <span class="text-zinc-200 font-bold block truncate max-w-[140px]">{{ $p->employer?->name ?? 'Employer' }}</span>
+                                    @if(!empty($p->employer?->company_name))
+                                        <span class="text-[10px] text-zinc-400 block truncate max-w-[140px]">🏢 {{ $p->employer->company_name }}</span>
+                                    @endif
                                 </td>
                                 <td class="py-3 px-2 text-right">
                                     <span class="text-[11px] font-black {{ $p->isLocked() ? 'text-zinc-400' : 'text-white' }}">

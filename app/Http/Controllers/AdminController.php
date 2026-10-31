@@ -178,6 +178,7 @@ class AdminController extends Controller
             'email' => ['required', 'email', 'max:255', "unique:users,email,{$user->id}"],
             'role' => ['required', 'in:admin,worker,employer'],
             'first_name' => ['nullable', 'string', 'max:100'],
+            'middle_name' => ['nullable', 'string', 'max:100'],
             'last_name' => ['nullable', 'string', 'max:100'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'sex' => ['nullable', 'string', 'in:Male,Female,Other,Prefer not to say'],
@@ -188,7 +189,7 @@ class AdminController extends Controller
         $user->update($validated);
 
         return redirect()->route('admin.users.index')
-            ->with('success', "User '{$user->display_name}' has been successfully updated.");
+            ->with('success', "User '{$user->name}' has been successfully updated.");
     }
 
     /**

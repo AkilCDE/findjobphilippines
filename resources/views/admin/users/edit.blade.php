@@ -15,7 +15,7 @@
             Edit User Profile
         </h1>
         <p class="text-xs sm:text-sm font-semibold text-zinc-400 mt-1">
-            Updating account details for <span class="text-white font-bold">{{ $user->display_name }}</span> ({{ $user->email }}).
+            Updating account details for <span class="text-white font-bold">{{ $user->name }}</span> ({{ $user->email }}).
         </p>
     </div>
 
@@ -38,18 +38,26 @@
 
         <div>
             <label for="name" class="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
-                Full Display Name <span class="text-zinc-500">*</span>
+                Full Person Name <span class="text-zinc-500">*</span>
             </label>
             <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" required
+                placeholder="e.g. Juan C. Dela Cruz"
                 class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-800 text-white text-sm font-semibold focus:border-white focus:outline-none">
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label for="first_name" class="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
                     First Name
                 </label>
                 <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $user->first_name) }}"
+                    class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-800 text-white text-sm font-semibold focus:border-white focus:outline-none">
+            </div>
+            <div>
+                <label for="middle_name" class="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
+                    Middle Name <span class="text-zinc-500 font-normal text-[10px]">(Optional)</span>
+                </label>
+                <input type="text" name="middle_name" id="middle_name" value="{{ old('middle_name', $user->middle_name) }}"
                     class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-800 text-white text-sm font-semibold focus:border-white focus:outline-none">
             </div>
             <div>
@@ -63,9 +71,10 @@
 
         <div>
             <label for="company_name" class="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1">
-                Company / Organization Name (For Employers)
+                Company / Business Name (Separated - For Employers)
             </label>
             <input type="text" name="company_name" id="company_name" value="{{ old('company_name', $user->company_name) }}"
+                placeholder="e.g. Acme Builders & Construction"
                 class="w-full px-4 py-2.5 rounded-xl bg-[#18181b] border border-zinc-800 text-white text-sm font-semibold focus:border-white focus:outline-none">
         </div>
 

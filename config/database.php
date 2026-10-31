@@ -65,6 +65,25 @@ return [
             ] : [],
         ],
 
+        'tidb' => [
+            'driver' => 'mysql',
+            'host' => env('TIDB_HOST', 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com'),
+            'port' => env('TIDB_PORT', '4000'),
+            'database' => env('TIDB_DATABASE', 'test'),
+            'username' => env('TIDB_USERNAME', '3pfD49M23rdPf1y.root'),
+            'password' => env('TIDB_PASSWORD', 'jnyfj7CoUL6DKYby'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? [
+                PDO::MYSQL_ATTR_SSL_CA => true,
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+            ] : [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

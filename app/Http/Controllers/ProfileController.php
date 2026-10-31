@@ -115,7 +115,10 @@ class ProfileController extends Controller
 
         $address = trim($validated['address_brgy']).', '.trim($validated['address_city']).', '.trim($validated['address_province']);
 
+        $personFullName = trim("{$validated['first_name']} ".(! empty($validated['middle_name']) ? "{$validated['middle_name']} " : '')."{$validated['last_name']}");
+
         $updateData = [
+            'name' => $personFullName,
             'first_name' => $validated['first_name'],
             'middle_name' => $validated['middle_name'] ?? null,
             'last_name' => $validated['last_name'],
@@ -125,10 +128,7 @@ class ProfileController extends Controller
         ];
 
         if ($user->isEmployer()) {
-            $updateData['company_name'] = $validated['company_name'];
-            $updateData['name'] = $validated['company_name'];
-        } else {
-            $updateData['name'] = trim("{$validated['first_name']} {$validated['last_name']}");
+            $updateData['company_name'] = ! empty($validated['company_name']) ? trim($validated['company_name']) : null;
         }
 
         if (! empty($validated['password'])) {

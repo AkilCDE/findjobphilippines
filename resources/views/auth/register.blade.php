@@ -101,10 +101,10 @@
                     </div>
                     <div>
                         <label for="worker_middle_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
-                            Middle Name
+                            Middle Name <span class="text-zinc-500 font-normal lowercase text-[10px]">(optional)</span>
                         </label>
                         <input type="text" name="middle_name" id="worker_middle_name" value="{{ old('middle_name') }}"
-                            placeholder="Middle Name"
+                            placeholder="Middle Name (Optional)"
                             class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('middle_name') border-rose-500 @enderror">
                         @error('middle_name')
                             <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
@@ -163,10 +163,10 @@
 
                     <div>
                         <label for="employer_middle_name" class="block text-xs font-extrabold uppercase tracking-wider text-white mb-1.5">
-                            Middle Name <span class="text-red-400">*</span>
+                            Middle Name <span class="text-zinc-500 font-normal lowercase text-[10px]">(optional)</span>
                         </label>
                         <input type="text" name="middle_name" id="employer_middle_name" value="{{ old('middle_name') }}"
-                            placeholder="Middle Name"
+                            placeholder="Middle Name (Optional)"
                             class="w-full px-3.5 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white placeholder-zinc-400 text-xs font-semibold focus:outline-none focus:border-white focus:bg-[#202024] transition-all @error('middle_name') border-rose-500 @enderror">
                         @error('middle_name')
                             <p class="text-xs text-rose-400 font-bold mt-1">{{ $message }}</p>
@@ -411,6 +411,162 @@
                     Sign In
                 </a>
             </p>
+        </div>
+
+    </div>
+</div>
+
+<!-- ==================== SIGNUP REVIEW & CONFIRMATION MODAL ==================== -->
+<div id="signupConfirmModal" onclick="if (event.target === this) closeSignupConfirmModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden transition-all">
+    <div class="w-full max-w-lg rounded-3xl bg-[#121215] border border-zinc-750 p-6 sm:p-7 shadow-2xl my-6 animate-in fade-in zoom-in-95 duration-150 text-zinc-100 max-h-[92vh] flex flex-col">
+        
+        <!-- Modal Header -->
+        <div class="flex items-start justify-between pb-4 border-b border-zinc-800 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-700 flex items-center justify-center text-white shrink-0 shadow-sm">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base sm:text-lg font-black text-white tracking-tight">
+                        Confirm Registration Details
+                    </h3>
+                    <p class="text-xs text-zinc-400 font-medium">
+                        Please review all your entered information before submitting.
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="closeSignupConfirmModal()" class="text-zinc-400 hover:text-white p-1 rounded-xl hover:bg-zinc-800 transition-colors" title="Close" aria-label="Close">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Scrollable Summary Content -->
+        <div class="overflow-y-auto my-4 pr-1 space-y-4 text-xs flex-1">
+            
+            <!-- Role Banner -->
+            <div class="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Selected Account Role</span>
+                    <span class="text-xs font-semibold text-zinc-300">Account portal & workspace type</span>
+                </div>
+                <div id="modalRoleBadge" class="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Personal Information Box -->
+            <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-3">
+                <p class="text-[11px] font-black uppercase tracking-wider text-zinc-400 border-b border-zinc-800 pb-1.5 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Personal Information
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <span class="text-[10px] font-bold text-zinc-400 uppercase">First Name</span>
+                        <p id="modalFirstName" class="font-bold text-white text-xs mt-0.5 break-words"></p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-zinc-400 uppercase">Middle Name</span>
+                        <p id="modalMiddleName" class="font-bold text-white text-xs mt-0.5 break-words"></p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-zinc-400 uppercase">Last Name</span>
+                        <p id="modalLastName" class="font-bold text-white text-xs mt-0.5 break-words"></p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-zinc-400 uppercase">Sex / Gender</span>
+                        <p id="modalSex" class="font-bold text-white text-xs mt-0.5"></p>
+                    </div>
+                </div>
+
+                <!-- Employer Company Name Row (Visible only for Employer) -->
+                <div id="modalEmployerSpecificRow" class="hidden pt-2 border-t border-zinc-800">
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase">Company / Business Name</span>
+                    <p id="modalCompanyName" class="font-bold text-white text-xs mt-0.5 break-words"></p>
+                </div>
+            </div>
+
+            <!-- Contact & Address Box -->
+            <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-3">
+                <p class="text-[11px] font-black uppercase tracking-wider text-zinc-400 border-b border-zinc-800 pb-1.5 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Contact & Address
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <span class="text-[10px] font-bold text-zinc-400 uppercase">Email Address</span>
+                        <p id="modalEmail" class="font-bold text-white text-xs mt-0.5 break-all"></p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-zinc-400 uppercase">Mobile Number</span>
+                        <p id="modalContact" class="font-bold text-white text-xs mt-0.5"></p>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-zinc-800">
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase">Full Address</span>
+                    <p id="modalAddress" class="font-bold text-white text-xs mt-0.5 break-words"></p>
+                </div>
+            </div>
+
+            <!-- Password Box with Hide & Show feature -->
+            <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-black uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Chosen Password
+                    </span>
+                    <span class="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                        ✓ Verified Strong
+                    </span>
+                </div>
+
+                <div class="relative flex items-center">
+                    <input type="password" id="modalPasswordDisplay" readonly
+                        class="w-full pl-3.5 pr-11 py-2.5 rounded-xl bg-[#18181b] border border-zinc-700 text-white font-mono text-xs focus:outline-none select-all"
+                        aria-label="Chosen Password">
+                    <button type="button" onclick="toggleModalPasswordVisibility()"
+                        class="absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400 hover:text-white cursor-pointer transition-colors"
+                        title="Show or hide password" aria-label="Toggle password visibility">
+                        <svg id="modalEyeOpen" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <svg id="modalEyeClosed" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-[10px] text-zinc-500 font-medium">Use the eye icon to verify or reveal the password you entered.</p>
+            </div>
+
+        </div>
+
+        <!-- Modal Actions Footer -->
+        <div class="pt-4 border-t border-zinc-800 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 shrink-0">
+            <button type="button" onclick="closeSignupConfirmModal()"
+                class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-850 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition-colors">
+                ← Edit Information
+            </button>
+            <button type="button" onclick="confirmAndSubmitRegistration()" id="modalConfirmSubmitBtn"
+                class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-1.5">
+                <span>Confirm & Create Account</span>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            </button>
         </div>
 
     </div>
@@ -663,7 +819,13 @@
     /**
      * Form Validation Trappings (Before Submit)
      */
+    let isRegistrationConfirmed = false;
+
     function validateRegisterForm(e) {
+        if (isRegistrationConfirmed) {
+            return true;
+        }
+
         const role = document.getElementById('roleInput').value || 'worker';
         const clientBanner = document.getElementById('clientErrorBanner');
         clientBanner.classList.add('hidden');
@@ -701,11 +863,6 @@
             if (!firstName) {
                 e.preventDefault();
                 showClientError('Employer First Name Required', 'Please fill in the employer first name.', document.getElementById('employer_first_name'));
-                return false;
-            }
-            if (!middleName) {
-                e.preventDefault();
-                showClientError('Employer Middle Name Required', 'Please fill in the employer middle name.', document.getElementById('employer_middle_name'));
                 return false;
             }
             if (!lastName) {
@@ -789,7 +946,101 @@
             return false;
         }
 
-        return true;
+        // All validations passed -> Open Confirmation Pop-up Modal to review details
+        e.preventDefault();
+        openSignupConfirmModal();
+        return false;
+    }
+
+    /**
+     * Signup Confirmation Modal Controls
+     */
+    function openSignupConfirmModal() {
+        const role = document.getElementById('roleInput').value || 'worker';
+        const modalRoleBadge = document.getElementById('modalRoleBadge');
+        const employerRow = document.getElementById('modalEmployerSpecificRow');
+
+        if (role === 'employer') {
+            modalRoleBadge.className = 'px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-950 text-emerald-300 border border-emerald-800 inline-flex items-center gap-1.5';
+            modalRoleBadge.innerHTML = '🏢 Employer Account';
+            employerRow.classList.remove('hidden');
+
+            const firstName = document.getElementById('employer_first_name').value.trim();
+            const middleName = document.getElementById('employer_middle_name').value.trim();
+            const lastName = document.getElementById('employer_last_name').value.trim();
+            const employerSex = document.getElementById('employer_sex').value;
+            const comp = document.getElementById('company_name').value.trim();
+
+            document.getElementById('modalFirstName').textContent = firstName || '—';
+            document.getElementById('modalMiddleName').textContent = middleName || '— (None)';
+            document.getElementById('modalLastName').textContent = lastName || '—';
+            document.getElementById('modalSex').textContent = employerSex || '—';
+            document.getElementById('modalCompanyName').textContent = comp || 'None (Individual Employer)';
+        } else {
+            modalRoleBadge.className = 'px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-sky-950 text-sky-300 border border-sky-800 inline-flex items-center gap-1.5';
+            modalRoleBadge.innerHTML = '👷 Worker Account';
+            employerRow.classList.add('hidden');
+
+            const firstName = document.getElementById('worker_first_name').value.trim();
+            const middleName = document.getElementById('worker_middle_name').value.trim();
+            const lastName = document.getElementById('worker_last_name').value.trim();
+            const workerSex = document.getElementById('worker_sex').value;
+
+            document.getElementById('modalFirstName').textContent = firstName || '—';
+            document.getElementById('modalMiddleName').textContent = middleName || '— (None)';
+            document.getElementById('modalLastName').textContent = lastName || '—';
+            document.getElementById('modalSex').textContent = workerSex || '—';
+        }
+
+        document.getElementById('modalEmail').textContent = document.getElementById('reg_email').value.trim() || '—';
+        document.getElementById('modalContact').textContent = document.getElementById('contact_number').value.trim() || '—';
+
+        const brgy = document.getElementById('address_brgy').value.trim();
+        const city = document.getElementById('address_city').value.trim();
+        const prov = document.getElementById('address_province').value.trim();
+        const fullAddr = [brgy, city, prov].filter(Boolean).join(', ');
+        document.getElementById('modalAddress').textContent = fullAddr || '—';
+
+        const pwd = document.getElementById('reg_password').value;
+        const pwdInput = document.getElementById('modalPasswordDisplay');
+        pwdInput.value = pwd;
+        pwdInput.type = 'password';
+        document.getElementById('modalEyeOpen').classList.remove('hidden');
+        document.getElementById('modalEyeClosed').classList.add('hidden');
+
+        const modal = document.getElementById('signupConfirmModal');
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeSignupConfirmModal() {
+        const modal = document.getElementById('signupConfirmModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function toggleModalPasswordVisibility() {
+        const input = document.getElementById('modalPasswordDisplay');
+        const eyeOpen = document.getElementById('modalEyeOpen');
+        const eyeClosed = document.getElementById('modalEyeClosed');
+        if (input.type === 'password') {
+            input.type = 'text';
+            eyeOpen.classList.add('hidden');
+            eyeClosed.classList.remove('hidden');
+        } else {
+            input.type = 'password';
+            eyeOpen.classList.remove('hidden');
+            eyeClosed.classList.add('hidden');
+        }
+    }
+
+    function confirmAndSubmitRegistration() {
+        isRegistrationConfirmed = true;
+        closeSignupConfirmModal();
+        const form = document.getElementById('registerForm');
+        form.submit();
     }
 
     function togglePasswordVisibility(inputId, btn) {
@@ -806,6 +1057,12 @@
             eyeClosed.classList.add('hidden');
         }
     }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSignupConfirmModal();
+        }
+    });
 
     document.addEventListener('DOMContentLoaded', function() {
         const initialRole = document.getElementById('roleInput').value || 'worker';

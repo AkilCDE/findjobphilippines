@@ -40,7 +40,7 @@
                 <option value="">All Employers (Sorted)</option>
                 @foreach($employers as $emp)
                     <option value="{{ $emp->id }}" {{ request('employer_id') == $emp->id ? 'selected' : '' }}>
-                        👤 {{ $emp->display_name }} ({{ $emp->job_posts_count }} posts)
+                        👤 {{ $emp->name }} @if(!empty($emp->company_name))(🏢 {{ $emp->company_name }})@endif ({{ $emp->job_posts_count }} posts)
                     </option>
                 @endforeach
             </select>
@@ -96,9 +96,12 @@
                         <tr class="hover:bg-zinc-900/50 transition-colors">
                             <td class="py-3.5 px-3">
                                 <span class="font-extrabold text-sm text-white block">
-                                    {{ $post->employer?->display_name ?? 'User #' . $post->employer_id }}
+                                    {{ $post->employer?->name ?? 'User #' . $post->employer_id }}
                                 </span>
-                                <span class="text-[11px] text-zinc-400 font-medium">
+                                <span class="text-[11px] text-zinc-400 font-medium block">
+                                    @if(!empty($post->employer?->company_name))
+                                        <span class="text-zinc-300 font-semibold">🏢 {{ $post->employer->company_name }}</span> • 
+                                    @endif
                                     {{ $post->employer?->email }}
                                 </span>
                             </td>
@@ -157,7 +160,7 @@
                                     <button type="button"
                                         onclick="confirmAction({
                                             title: 'Admin: Delete Job Post?',
-                                            message: 'Are you sure you want to permanently delete \'{{ addslashes($post->title) }}\' posted by {{ addslashes($post->employer?->display_name) }}? All applications will be erased.',
+                                            message: 'Are you sure you want to permanently delete \'{{ addslashes($post->title) }}\' posted by {{ addslashes($post->employer?->name ?? 'Employer') }}@if(!empty($post->employer?->company_name)) ({{ addslashes($post->employer->company_name) }})@endif? All applications will be erased.',
                                             formAction: '{{ route('admin.posts.destroy', $post) }}',
                                             method: 'DELETE',
                                             confirmText: 'Yes, Delete Post',

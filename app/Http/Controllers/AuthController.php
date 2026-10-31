@@ -157,10 +157,10 @@ class AuthController extends Controller
             ], $messages);
 
             $employerFullName = trim("{$validated['first_name']} ".(! empty($validated['middle_name']) ? "{$validated['middle_name']} " : '')."{$validated['last_name']}");
-            $companyName = ! empty($validated['company_name']) ? $validated['company_name'] : $employerFullName;
+            $companyName = ! empty($validated['company_name']) ? trim($validated['company_name']) : null;
 
             $user = User::create([
-                'name' => $companyName,
+                'name' => $employerFullName,
                 'first_name' => $validated['first_name'],
                 'middle_name' => $validated['middle_name'] ?? null,
                 'last_name' => $validated['last_name'],

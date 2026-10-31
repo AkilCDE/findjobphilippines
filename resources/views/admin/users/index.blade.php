@@ -116,7 +116,7 @@
                 <table class="w-full text-left text-xs font-semibold">
                     <thead>
                         <tr class="border-b border-zinc-800 text-zinc-400 uppercase tracking-wider text-[10px]">
-                            <th class="py-3 px-3">Company / Employer</th>
+                            <th class="py-3 px-3">Employer Name / Company</th>
                             <th class="py-3 px-3">Contact & Address</th>
                             <th class="py-3 px-3">Published Posts</th>
                             <th class="py-3 px-3">Registered Date</th>
@@ -129,15 +129,21 @@
                                 <td class="py-3.5 px-3">
                                     <div class="flex items-center gap-3">
                                         <div class="w-9 h-9 rounded-xl bg-zinc-900 text-white border border-zinc-700 font-black flex items-center justify-center text-xs shadow-sm flex-shrink-0">
-                                            {{ strtoupper(substr($employer->company_name ?? $employer->name, 0, 1)) }}
+                                            {{ strtoupper(substr($employer->name, 0, 1)) }}
                                         </div>
                                         <div>
                                             <span class="font-extrabold text-sm text-white block">
-                                                {{ $employer->company_name ?? $employer->name }}
+                                                {{ $employer->name }}
                                             </span>
-                                            <span class="text-[11px] text-zinc-400 font-medium">
-                                                Contact Person: {{ $employer->name }} • {{ $employer->email }}
-                                            </span>
+                                            <div class="text-[11px] text-zinc-400 font-medium flex flex-wrap items-center gap-1.5 mt-0.5">
+                                                @if(!empty($employer->company_name))
+                                                    <span class="inline-flex items-center gap-1 text-zinc-200 font-semibold bg-zinc-800 px-2 py-0.5 rounded-md border border-zinc-700 text-[10px]">
+                                                        🏢 {{ $employer->company_name }}
+                                                    </span>
+                                                    <span class="text-zinc-600">•</span>
+                                                @endif
+                                                <span>{{ $employer->email }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -169,7 +175,7 @@
                                             <button type="button"
                                                 onclick="confirmAction({
                                                     title: 'Delete Employer Account?',
-                                                    message: 'Are you sure you want to permanently delete employer {{ addslashes($employer->display_name) }}? All their job posts and applicant records will be permanently removed.',
+                                                    message: 'Are you sure you want to permanently delete employer {{ addslashes($employer->name) }}@if(!empty($employer->company_name)) ({{ addslashes($employer->company_name) }})@endif? All their job posts and applicant records will be permanently removed.',
                                                     formAction: '{{ route('admin.users.destroy', $employer) }}',
                                                     method: 'DELETE',
                                                     confirmText: 'Yes, Delete Employer',

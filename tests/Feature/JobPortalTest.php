@@ -26,6 +26,17 @@ class JobPortalTest extends TestCase
         $mapResponse->assertSee('Philippine Job Map');
     }
 
+    public function test_register_page_has_confirmation_modal_and_password_toggle(): void
+    {
+        $response = $this->get('/register');
+        $response->assertStatus(200);
+        $response->assertSee('signupConfirmModal');
+        $response->assertSee('Confirm Registration Details');
+        $response->assertSee('modalPasswordDisplay');
+        $response->assertSee('toggleModalPasswordVisibility');
+        $response->assertSee('confirmAndSubmitRegistration');
+    }
+
     public function test_worker_can_register_with_bohol_address(): void
     {
         $response = $this->post('/register', [
@@ -48,6 +59,51 @@ class JobPortalTest extends TestCase
             'last_name' => 'Dela Cruz',
             'address' => 'Ambuan, Catigbian, Bohol, Philippines',
         ]);
+    }
+
+    public function test_employer_can_register_with_optional_middle_name_and_separated_company_name(): void
+    {
+        $response = $this->post('/register', [
+            'role' => 'employer',
+            'first_name' => 'Maria',
+            'middle_name' => '', // optional, left blank
+            'last_name' => 'Santos',
+            'company_name' => 'Santos Agri Corp',
+            'sex' => 'Female',
+            'email' => 'maria.santos@example.com',
+            'address' => 'Poblacion, Catigbian, Bohol',
+            'contact_number' => '09123456789',
+            'password' => 'Secret1234!',
+            'password_confirmation' => 'Secret1234!',
+        ]);
+
+        $response->assertRedirect('/employer/dashboard');
+        $this->assertDatabaseHas('users', [
+            'email' => 'maria.santos@example.com',
+            'role' => 'employer',
+            'name' => 'Maria Santos',
+            'first_name' => 'Maria',
+            'middle_name' => null,
+            'last_name' => 'Santos',
+            'company_name' => 'Santos Agri Corp',
+        ]);
+    }
+
+    public function test_admin_users_page_shows_employer_name_and_separated_company_name(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'name' => 'Roberto Santos',
+            'first_name' => 'Roberto',
+            'last_name' => 'Santos',
+            'company_name' => 'Bohol Agro Builders Corp',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/users');
+        $response->assertStatus(200);
+        $response->assertSee('Roberto Santos');
+        $response->assertSee('Bohol Agro Builders Corp');
     }
 
     public function test_employer_can_post_job_with_map_coordinates(): void
