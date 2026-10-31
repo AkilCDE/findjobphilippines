@@ -22,18 +22,16 @@ services:
       - key: LOG_CHANNEL
         value: stderr
       - key: DB_CONNECTION
-        value: mysql
+        value: pgsql
       - key: DB_HOST
-        value: gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+        value: aws-0-eu-north-1.pooler.supabase.com
       - key: DB_PORT
-        value: "4000"
+        value: "5432"
       - key: DB_DATABASE
-        value: test
+        value: postgres
       - key: DB_USERNAME
-        value: 3pfD49M23rdPf1y.root
+        value: postgres.dmncotptzhqxihnrcepx
       - key: DB_PASSWORD
-        value: jnyfj7CoUL6DKYby
-      - key: MYSQL_ATTR_SSL_CA
-        value: "true"
-      - key: MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
-        value: "false"
+        value: findjobph2026
+      - key: DB_SSLMODE
+        value: require

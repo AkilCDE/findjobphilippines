@@ -19,12 +19,17 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 0. Clean slate: remove all existing data in proper dependency order
-        Schema::disableForeignKeyConstraints();
-        DB::table('messages')->truncate();
-        DB::table('job_applications')->truncate();
-        DB::table('job_posts')->truncate();
-        DB::table('users')->truncate();
-        Schema::enableForeignKeyConstraints();
+        $driver = DB::getDriverName();
+        if ($driver === 'pgsql') {
+            DB::statement('TRUNCATE TABLE messages, job_applications, job_posts, users RESTART IDENTITY CASCADE');
+        } else {
+            Schema::disableForeignKeyConstraints();
+            DB::table('messages')->truncate();
+            DB::table('job_applications')->truncate();
+            DB::table('job_posts')->truncate();
+            DB::table('users')->truncate();
+            Schema::enableForeignKeyConstraints();
+        }
 
         // ==========================================
         // 1. ADMIN USER
