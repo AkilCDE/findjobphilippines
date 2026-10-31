@@ -26,6 +26,34 @@ class JobPortalTest extends TestCase
         $mapResponse->assertSee('Philippine Job Map');
     }
 
+    public function test_browse_jobs_pagination_has_dark_mode_contrast_buttons(): void
+    {
+        $employer = User::factory()->create(['role' => 'employer']);
+        for ($i = 1; $i <= 15; $i++) {
+            JobPost::create([
+                'employer_id' => $employer->id,
+                'title' => "Skilled Worker Position #{$i}",
+                'description' => 'Detailed description for test job.',
+                'requirements' => 'Requirements for test job.',
+                'category' => 'General Labor',
+                'job_type' => 'Full-time',
+                'salary_range' => '₱600 / day',
+                'workers_needed' => 5,
+                'workers_hired' => 0,
+                'location_address' => 'Taguig City, Metro Manila',
+                'latitude' => 14.5547,
+                'longitude' => 121.0509,
+                'status' => 'open',
+            ]);
+        }
+
+        $response = $this->get('/jobs');
+        $response->assertStatus(200);
+        $response->assertSee('Pagination Navigation');
+        $response->assertSee('bg-[#18181b]');
+        $response->assertSee('Next');
+    }
+
     public function test_register_page_has_confirmation_modal_and_password_toggle(): void
     {
         $response = $this->get('/register');
