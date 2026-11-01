@@ -35,3 +35,7 @@ services:
         value: findjobph2026
       - key: DB_SSLMODE
         value: require
+      - key: DATABASE_URL
+        value: "postgresql://postgres.dmncotptzhqxihnrcepx:findjobph2026@aws-0-eu-north-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+      - key: DIRECT_URL
+        value: "postgresql://postgres.dmncotptzhqxihnrcepx:findjobph2026@aws-0-eu-north-1.pooler.supabase.com:5432/postgres"

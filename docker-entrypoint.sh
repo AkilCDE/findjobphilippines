@@ -36,7 +36,7 @@ if [ -z "$APP_KEY" ]; then
 fi
 
 # 5. Database detection & cloud database support
-# Support Render PostgreSQL / MySQL / TiDB Cloud / SQLite
+# Support Supabase PostgreSQL / Render DATABASE_URL / MySQL / SQLite
 if [ -n "$DATABASE_URL" ]; then
     export DB_URL="${DATABASE_URL}"
     if [[ "$DATABASE_URL" == postgres* ]]; then
@@ -46,9 +46,32 @@ if [ -n "$DATABASE_URL" ]; then
     fi
 fi
 
-DB_CONN="${DB_CONNECTION:-mysql}"
-DB_H="${DB_HOST:-gateway01.ap-southeast-1.prod.aws.tidbcloud.com}"
-DB_P="${DB_PORT:-4000}"
+DB_CONN="${DB_CONNECTION:-pgsql}"
+DB_H="${DB_HOST:-aws-0-eu-north-1.pooler.supabase.com}"
+DB_P="${DB_PORT:-5432}"
+DB_D="${DB_DATABASE:-postgres}"
+DB_U="${DB_USERNAME:-postgres.dmncotptzhqxihnrcepx}"
+DB_PASS="${DB_PASSWORD:-findjobph2026}"
+DB_SSL="${DB_SSLMODE:-require}"
+
+echo "Configuring database connection: ${DB_CONN} on ${DB_H}:${DB_P}..."
+
+# Always ensure the container's .env file is updated with the active database credentials
+sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=${DB_CONN}|g" /var/www/html/.env
+sed -i "s|^#* *DB_HOST=.*|DB_HOST=${DB_H}|g" /var/www/html/.env
+sed -i "s|^#* *DB_PORT=.*|DB_PORT=${DB_P}|g" /var/www/html/.env
+sed -i "s|^#* *DB_DATABASE=.*|DB_DATABASE=${DB_D}|g" /var/www/html/.env
+sed -i "s|^#* *DB_USERNAME=.*|DB_USERNAME=${DB_U}|g" /var/www/html/.env
+sed -i "s|^#* *DB_PASSWORD=.*|DB_PASSWORD=${DB_PASS}|g" /var/www/html/.env
+sed -i "s|^#* *DB_SSLMODE=.*|DB_SSLMODE=${DB_SSL}|g" /var/www/html/.env
+
+if [ -n "$DATABASE_URL" ]; then
+    if grep -q "^DATABASE_URL=" /var/www/html/.env; then
+        sed -i "s|^DATABASE_URL=.*|DATABASE_URL=\"${DATABASE_URL}\"|g" /var/www/html/.env
+    else
+        echo "DATABASE_URL=\"${DATABASE_URL}\"" >> /var/www/html/.env
+    fi
+fi
 
 # Auto-configure SSL options for cloud MySQL connections
 if [ "$DB_CONN" = "mysql" ] || [ "$DB_CONN" = "mariadb" ]; then
@@ -81,8 +104,8 @@ elif [ "$DB_CONN" = "mysql" ] || [ "$DB_CONN" = "mariadb" ]; then
     else
         echo "Successfully connected to cloud database server at ${DB_H}:${DB_P}."
     fi
-elif [ "$DB_CONN" = "pgsql" ]; then
-    echo "Using PostgreSQL database connection."
+elif [ "$DB_CONN" = "pgsql" ] || [ "$DB_CONN" = "supabase" ]; then
+    echo "Using PostgreSQL (Supabase) database connection at ${DB_H}:${DB_P}."
 fi
 
 if [ "$USE_SQLITE" = true ]; then
