@@ -54,6 +54,53 @@ class JobPortalTest extends TestCase
         $response->assertSee('Next');
     }
 
+    public function test_browse_jobs_has_two_column_mobile_grid_and_mobile_sidebar_responsive_navigation(): void
+    {
+        $employer = User::factory()->create(['role' => 'employer']);
+        JobPost::create([
+            'employer_id' => $employer->id,
+            'title' => 'Welder Specialist',
+            'description' => 'MIG/TIG welding.',
+            'requirements' => 'NC II certification.',
+            'category' => 'Construction & Skilled Trades',
+            'job_type' => 'Full-time',
+            'salary_range' => '₱750 / day',
+            'workers_needed' => 3,
+            'workers_hired' => 1,
+            'location_address' => 'Pasig City, Metro Manila',
+            'latitude' => 14.5764,
+            'longitude' => 121.0851,
+            'status' => 'open',
+        ]);
+
+        // Verify two columns in mobile view on jobs index
+        $jobsResponse = $this->get('/jobs');
+        $jobsResponse->assertStatus(200);
+        $jobsResponse->assertSee('grid-cols-2');
+
+        // Verify employer mobile navigation header and sidebar tokens
+        $employerResponse = $this->actingAs($employer)->get('/employer/dashboard');
+        $employerResponse->assertStatus(200);
+        $employerResponse->assertSee('toggleAppSidebar');
+        $employerResponse->assertSee('sidebarBackdrop');
+        $employerResponse->assertSee('translate: 0% 0');
+
+        // Verify admin mobile navigation header and sidebar tokens
+        $admin = User::factory()->create(['role' => 'admin']);
+        $adminResponse = $this->actingAs($admin)->get('/admin/dashboard');
+        $adminResponse->assertStatus(200);
+        $adminResponse->assertSee('toggleAdminSidebar');
+        $adminResponse->assertSee('adminSidebarBackdrop');
+        $adminResponse->assertSee('translate: 0% 0');
+
+        // Verify worker mobile navigation header and sidebar tokens
+        $worker = User::factory()->create(['role' => 'worker']);
+        $workerResponse = $this->actingAs($worker)->get('/worker/applications');
+        $workerResponse->assertStatus(200);
+        $workerResponse->assertSee('toggleAppSidebar');
+        $workerResponse->assertSee('sidebarBackdrop');
+    }
+
     public function test_register_page_has_confirmation_modal_and_password_toggle(): void
     {
         $response = $this->get('/register');

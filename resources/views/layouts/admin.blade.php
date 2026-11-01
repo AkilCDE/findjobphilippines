@@ -31,7 +31,7 @@
 
         /* Sidebar hide / show transitions */
         #appSidebar, #adminSidebar {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), translate 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #mainContentWrapper {
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -41,6 +41,8 @@
         @media (min-width: 1024px) {
             body.sidebar-collapsed #appSidebar,
             body.sidebar-collapsed #adminSidebar {
+                --tw-translate-x: -100% !important;
+                translate: -100% 0 !important;
                 transform: translateX(-100%) !important;
             }
             body.sidebar-collapsed #mainContentWrapper {
@@ -55,7 +57,12 @@
         @media (max-width: 1023px) {
             body.sidebar-mobile-open #appSidebar,
             body.sidebar-mobile-open #adminSidebar {
+                --tw-translate-x: 0% !important;
+                translate: 0% 0 !important;
                 transform: translateX(0) !important;
+                left: 0 !important;
+                visibility: visible !important;
+                opacity: 1 !important;
             }
             body.sidebar-mobile-open #adminSidebarBackdrop,
             body.sidebar-mobile-open #sidebarBackdrop {
@@ -73,7 +80,62 @@
     <div class="flex-1 flex min-h-screen">
 
         <!-- ==================== MAIN CONTENT AREA (Offset by sidebar on lg) ==================== -->
-        <div id="mainContentWrapper" class="flex-1 lg:pl-64 flex flex-col min-w-0 bg-[#09090b]">
+        <div id="mainContentWrapper" class="flex-1 lg:pl-64 flex flex-col min-w-0 bg-[#09090b] transition-all duration-300 ease-in-out">
+            
+            <!-- Sticky Top Header for Admin (Visible on Mobile with Hamburger Button, Collapsible on Desktop) -->
+            <header class="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-zinc-800 px-4 sm:px-6 py-3 flex items-center justify-between shadow-md">
+                <div class="flex items-center gap-3">
+                    <!-- Mobile Hamburger Button (< lg screens) -->
+                    <button type="button"
+                        onclick="toggleAdminSidebar()"
+                        class="lg:hidden p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-colors focus:outline-none"
+                        title="Toggle Navigation Menu"
+                        aria-label="Toggle Navigation Menu">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
+                    <!-- Desktop Show Navbar Button (Only visible on desktop when sidebar is hidden/collapsed) -->
+                    <button type="button"
+                        id="desktopSidebarOpenBtn"
+                        onclick="toggleAdminSidebar(true)"
+                        class="hidden p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-colors focus:outline-none"
+                        title="Show Sidebar Navbar"
+                        aria-label="Show Sidebar Navbar">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                        </svg>
+                    </button>
+
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 group">
+                        <img src="{{ asset('favicon.svg') }}" alt="Findjobph Logo" class="w-7 h-7 rounded-full shadow-sm group-hover:scale-105 transition-transform shrink-0">
+                        <span class="font-black text-sm tracking-tight text-white hidden sm:inline">Findjob<span class="text-zinc-400">ph</span></span>
+                        <span class="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-750">
+                            Admin
+                        </span>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <a href="{{ route('admin.users.index') }}"
+                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-750 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-bold transition-colors">
+                        <span>Users</span>
+                    </a>
+                    <a href="{{ route('admin.posts.index') }}"
+                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-750 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-bold transition-colors">
+                        <span>Jobs</span>
+                    </a>
+                    @if(auth()->check())
+                        <a href="{{ route('profile.show') }}" class="flex items-center gap-2 pl-2 border-l border-zinc-800 text-xs font-bold text-zinc-300 hover:text-white transition-colors">
+                            <span class="w-7 h-7 rounded-lg bg-zinc-800 text-white font-extrabold flex items-center justify-center text-xs border border-zinc-750">
+                                {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
+                            </span>
+                            <span class="hidden sm:inline truncate max-w-[120px]">{{ auth()->user()->display_name }}</span>
+                        </a>
+                    @endif
+                </div>
+            </header>
             
             <main class="flex-grow p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
                 
@@ -145,6 +207,8 @@
     <script>
         function toggleAdminSidebar(show) {
             const isDesktop = window.innerWidth >= 1024;
+            const sidebar = document.getElementById('appSidebar') || document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop') || document.getElementById('adminSidebarBackdrop');
 
             if (isDesktop) {
                 const isCollapsed = document.body.classList.contains('sidebar-collapsed');
@@ -152,9 +216,19 @@
 
                 if (shouldShow) {
                     document.body.classList.remove('sidebar-collapsed');
+                    if (sidebar) {
+                        sidebar.style.removeProperty('--tw-translate-x');
+                        sidebar.style.removeProperty('translate');
+                        sidebar.style.removeProperty('transform');
+                    }
                     try { localStorage.setItem('sidebar_collapsed', '0'); } catch(e) {}
                 } else {
                     document.body.classList.add('sidebar-collapsed');
+                    if (sidebar) {
+                        sidebar.style.setProperty('--tw-translate-x', '-100%', 'important');
+                        sidebar.style.setProperty('translate', '-100% 0', 'important');
+                        sidebar.style.setProperty('transform', 'translateX(-100%)', 'important');
+                    }
                     try { localStorage.setItem('sidebar_collapsed', '1'); } catch(e) {}
                 }
                 document.body.classList.remove('sidebar-mobile-open');
@@ -166,9 +240,27 @@
                 if (shouldOpen) {
                     document.body.classList.add('sidebar-mobile-open');
                     document.body.classList.add('overflow-hidden');
+                    if (sidebar) {
+                        sidebar.style.setProperty('--tw-translate-x', '0%', 'important');
+                        sidebar.style.setProperty('translate', '0% 0', 'important');
+                        sidebar.style.setProperty('transform', 'translateX(0)', 'important');
+                    }
+                    if (backdrop) {
+                        backdrop.classList.remove('hidden');
+                        backdrop.style.setProperty('display', 'block', 'important');
+                    }
                 } else {
                     document.body.classList.remove('sidebar-mobile-open');
                     document.body.classList.remove('overflow-hidden');
+                    if (sidebar) {
+                        sidebar.style.removeProperty('--tw-translate-x');
+                        sidebar.style.removeProperty('translate');
+                        sidebar.style.removeProperty('transform');
+                    }
+                    if (backdrop) {
+                        backdrop.classList.add('hidden');
+                        backdrop.style.removeProperty('display');
+                    }
                 }
             }
         }
@@ -180,8 +272,33 @@
                 try {
                     if (localStorage.getItem('sidebar_collapsed') === '1') {
                         document.body.classList.add('sidebar-collapsed');
+                        const sidebar = document.getElementById('appSidebar') || document.getElementById('adminSidebar');
+                        if (sidebar) {
+                            sidebar.style.setProperty('--tw-translate-x', '-100%', 'important');
+                            sidebar.style.setProperty('translate', '-100% 0', 'important');
+                            sidebar.style.setProperty('transform', 'translateX(-100%)', 'important');
+                        }
                     }
                 } catch(e) {}
+            }
+        });
+
+        // Auto-close mobile drawer if resized to desktop screen
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                document.body.classList.remove('sidebar-mobile-open');
+                document.body.classList.remove('overflow-hidden');
+                const backdrop = document.getElementById('sidebarBackdrop') || document.getElementById('adminSidebarBackdrop');
+                if (backdrop) {
+                    backdrop.classList.add('hidden');
+                    backdrop.style.removeProperty('display');
+                }
+                const sidebar = document.getElementById('appSidebar') || document.getElementById('adminSidebar');
+                if (sidebar && !document.body.classList.contains('sidebar-collapsed')) {
+                    sidebar.style.removeProperty('--tw-translate-x');
+                    sidebar.style.removeProperty('translate');
+                    sidebar.style.removeProperty('transform');
+                }
             }
         });
 

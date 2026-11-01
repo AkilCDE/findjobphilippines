@@ -11,7 +11,7 @@
 
 <!-- ==================== LEFT SIDEBAR NAVBAR ==================== -->
 <aside id="{{ $sidebarId }}"
-    class="fixed inset-y-0 left-0 z-50 w-64 bg-black text-white border-r border-zinc-850 flex flex-col justify-between transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none">
+    class="fixed inset-y-0 left-0 z-50 w-64 max-w-[85vw] bg-black text-white border-r border-zinc-850 flex flex-col justify-between transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none">
     
     <!-- Top Sidebar Content -->
     <div class="flex flex-col flex-1 overflow-y-auto">

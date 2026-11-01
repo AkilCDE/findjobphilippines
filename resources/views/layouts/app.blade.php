@@ -66,7 +66,7 @@
 
         /* Sidebar hide / show transitions */
         #appSidebar, #adminSidebar {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), translate 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #mainContentWrapper {
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -76,6 +76,8 @@
         @media (min-width: 1024px) {
             body.sidebar-collapsed #appSidebar,
             body.sidebar-collapsed #adminSidebar {
+                --tw-translate-x: -100% !important;
+                translate: -100% 0 !important;
                 transform: translateX(-100%) !important;
             }
             body.sidebar-collapsed #mainContentWrapper {
@@ -90,7 +92,12 @@
         @media (max-width: 1023px) {
             body.sidebar-mobile-open #appSidebar,
             body.sidebar-mobile-open #adminSidebar {
+                --tw-translate-x: 0% !important;
+                translate: 0% 0 !important;
                 transform: translateX(0) !important;
+                left: 0 !important;
+                visibility: visible !important;
+                opacity: 1 !important;
             }
             body.sidebar-mobile-open #adminSidebarBackdrop,
             body.sidebar-mobile-open #sidebarBackdrop {
@@ -416,6 +423,8 @@
     <script>
         function toggleAppSidebar(show) {
             const isDesktop = window.innerWidth >= 1024;
+            const sidebar = document.getElementById('appSidebar') || document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop') || document.getElementById('adminSidebarBackdrop');
 
             if (isDesktop) {
                 const isCollapsed = document.body.classList.contains('sidebar-collapsed');
@@ -423,9 +432,19 @@
 
                 if (shouldShow) {
                     document.body.classList.remove('sidebar-collapsed');
+                    if (sidebar) {
+                        sidebar.style.removeProperty('--tw-translate-x');
+                        sidebar.style.removeProperty('translate');
+                        sidebar.style.removeProperty('transform');
+                    }
                     try { localStorage.setItem('sidebar_collapsed', '0'); } catch(e) {}
                 } else {
                     document.body.classList.add('sidebar-collapsed');
+                    if (sidebar) {
+                        sidebar.style.setProperty('--tw-translate-x', '-100%', 'important');
+                        sidebar.style.setProperty('translate', '-100% 0', 'important');
+                        sidebar.style.setProperty('transform', 'translateX(-100%)', 'important');
+                    }
                     try { localStorage.setItem('sidebar_collapsed', '1'); } catch(e) {}
                 }
                 document.body.classList.remove('sidebar-mobile-open');
@@ -437,9 +456,27 @@
                 if (shouldOpen) {
                     document.body.classList.add('sidebar-mobile-open');
                     document.body.classList.add('overflow-hidden');
+                    if (sidebar) {
+                        sidebar.style.setProperty('--tw-translate-x', '0%', 'important');
+                        sidebar.style.setProperty('translate', '0% 0', 'important');
+                        sidebar.style.setProperty('transform', 'translateX(0)', 'important');
+                    }
+                    if (backdrop) {
+                        backdrop.classList.remove('hidden');
+                        backdrop.style.setProperty('display', 'block', 'important');
+                    }
                 } else {
                     document.body.classList.remove('sidebar-mobile-open');
                     document.body.classList.remove('overflow-hidden');
+                    if (sidebar) {
+                        sidebar.style.removeProperty('--tw-translate-x');
+                        sidebar.style.removeProperty('translate');
+                        sidebar.style.removeProperty('transform');
+                    }
+                    if (backdrop) {
+                        backdrop.classList.add('hidden');
+                        backdrop.style.removeProperty('display');
+                    }
                 }
             }
         }
@@ -451,8 +488,33 @@
                 try {
                     if (localStorage.getItem('sidebar_collapsed') === '1') {
                         document.body.classList.add('sidebar-collapsed');
+                        const sidebar = document.getElementById('appSidebar') || document.getElementById('adminSidebar');
+                        if (sidebar) {
+                            sidebar.style.setProperty('--tw-translate-x', '-100%', 'important');
+                            sidebar.style.setProperty('translate', '-100% 0', 'important');
+                            sidebar.style.setProperty('transform', 'translateX(-100%)', 'important');
+                        }
                     }
                 } catch(e) {}
+            }
+        });
+
+        // Auto-close mobile drawer if resized to desktop screen
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                document.body.classList.remove('sidebar-mobile-open');
+                document.body.classList.remove('overflow-hidden');
+                const backdrop = document.getElementById('sidebarBackdrop') || document.getElementById('adminSidebarBackdrop');
+                if (backdrop) {
+                    backdrop.classList.add('hidden');
+                    backdrop.style.removeProperty('display');
+                }
+                const sidebar = document.getElementById('appSidebar') || document.getElementById('adminSidebar');
+                if (sidebar && !document.body.classList.contains('sidebar-collapsed')) {
+                    sidebar.style.removeProperty('--tw-translate-x');
+                    sidebar.style.removeProperty('translate');
+                    sidebar.style.removeProperty('transform');
+                }
             }
         });
 
@@ -463,15 +525,23 @@
             if (typeof show === 'boolean') {
                 if (show) {
                     drawer.classList.remove('translate-x-full');
+                    drawer.style.setProperty('--tw-translate-x', '0%', 'important');
+                    drawer.style.setProperty('translate', '0% 0', 'important');
+                    drawer.style.setProperty('transform', 'translateX(0)', 'important');
                     backdrop.classList.remove('hidden');
+                    backdrop.style.setProperty('display', 'block', 'important');
                     document.body.classList.add('overflow-hidden');
                 } else {
                     drawer.classList.add('translate-x-full');
+                    drawer.style.removeProperty('--tw-translate-x');
+                    drawer.style.removeProperty('translate');
+                    drawer.style.removeProperty('transform');
                     backdrop.classList.add('hidden');
+                    backdrop.style.removeProperty('display');
                     document.body.classList.remove('overflow-hidden');
                 }
             } else {
-                const isClosed = drawer.classList.contains('translate-x-full');
+                const isClosed = drawer.classList.contains('translate-x-full') && !drawer.style.translate;
                 toggleMobileNav(isClosed);
             }
         }
